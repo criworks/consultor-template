@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* Base */
+@import './base/fonts.css';
+@import './base/reset.css';
+
+/* Theme tokens */
+@import './theme/colors.css';
+@import './theme/typography.css';
+@import './theme/layout.css';
+
+/* Animation base states */
+@import './animations/backdrop.css';
+@import './animations/hero-initial.css';

@@ -1,0 +1,23 @@
+@theme {
+  /* Hero title: 50px at 720px → 100px at 1210px */
+  --text-hero-title: clamp(3.125rem, calc(-1.467rem + 10.204vw), 6.25rem);
+
+  /* Section intro text */
+  --text-intro: 2rem;
+
+  /* Line heights */
+  --leading-hero: 0.92;
+  --leading-sub: 1.26;
+  --leading-intro: 1.4;
+
+  /* Letter spacing */
+  --tracking-hero: -0.02em;
+
+  /* Radii */
+  --radius-link-primary: 10px;
+}
+
+/* z-index above all for splash loader */
+@utility z-splash {
+  z-index: 9999;
+}

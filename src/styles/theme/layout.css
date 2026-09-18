@@ -1,0 +1,5 @@
+@theme {
+  /* Breakpoints — used with max-* and min-* Tailwind prefixes */
+  --breakpoint-narrow: 1211px;
+  --breakpoint-mobile: 721px;
+}

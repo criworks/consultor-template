@@ -1,0 +1,7 @@
+/* Intro backdrop — blurs the hero bg image as the intro section appears.
+   Starts invisible; GSAP drives opacity and blur during scroll. */
+[data-animate='intro-backdrop'] {
+  backdrop-filter: blur(40px);
+  background: rgba(0, 0, 0, 0.15);
+  opacity: 0;
+}
