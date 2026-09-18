@@ -1,0 +1,22 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/assets/*": ["src/assets/*"],
+      "@/components/*": ["src/components/*"],
+      "@/config/*": ["src/config/*"],
+      "@/data/*": ["src/data/*"],
+      "@/layouts/*": ["src/layouts/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/sections/*": ["src/sections/*"],
+      "@/styles/*": ["src/styles/*"],
+      "@/config": ["src/config/index.ts"],
+      "@/components": ["src/components/index.ts"],
+      "@/data": ["src/data/index.ts"],
+      "@/lib": ["src/lib/index.ts"],
+      "@/sections": ["src/sections/index.ts"]
+    }
+  }
+}
