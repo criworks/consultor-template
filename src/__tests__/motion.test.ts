@@ -1,11 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { prefersReducedMotion, shouldAnimateByPreference } from '@/lib/motion'
 
-describe('prefersReducedMotion', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks()
-  })
+// jsdom does not implement matchMedia, so each test stubs it.
+function stubMatchMedia(matches: boolean): void {
+  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches } as MediaQueryList))
+}
 
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('prefersReducedMotion', () => {
   it('returns false when matchMedia is not available (SSR)', () => {
     const original = globalThis.window
     // @ts-expect-error simulating SSR
@@ -15,22 +20,22 @@ describe('prefersReducedMotion', () => {
   })
 
   it('returns true when prefers-reduced-motion: reduce', () => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList)
+    stubMatchMedia(true)
     expect(prefersReducedMotion()).toBe(true)
   })
 
   it('returns false when prefers-reduced-motion: no-preference', () => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList)
+    stubMatchMedia(false)
     expect(prefersReducedMotion()).toBe(false)
   })
 })
 
 describe('shouldAnimateByPreference', () => {
   it('returns inverse of prefersReducedMotion', () => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList)
+    stubMatchMedia(false)
     expect(shouldAnimateByPreference()).toBe(true)
 
-    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList)
+    stubMatchMedia(true)
     expect(shouldAnimateByPreference()).toBe(false)
   })
 })

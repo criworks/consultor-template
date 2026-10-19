@@ -4,7 +4,7 @@ import {
   ANIMATION_EASING,
   ANIMATION_DELAYS,
   HERO_BG,
-  SPLASH_CIRCUMFERENCE,
+  HERO_ENTRANCE,
 } from '@/lib/constants'
 
 describe('ANIMATION_TIMINGS', () => {
@@ -43,8 +43,13 @@ describe('HERO_BG', () => {
   })
 })
 
-describe('SPLASH_CIRCUMFERENCE', () => {
-  it('matches 2πr for r=8', () => {
-    expect(SPLASH_CIRCUMFERENCE).toBeCloseTo(2 * Math.PI * 8, 2)
+describe('HERO_ENTRANCE', () => {
+  it('START_OPACITY keeps content readable without JS', () => {
+    expect(HERO_ENTRANCE.START_OPACITY).toBeGreaterThanOrEqual(0.5)
+    expect(HERO_ENTRANCE.START_OPACITY).toBeLessThan(1)
+  })
+
+  it('MAX_DURATION stays under one second', () => {
+    expect(HERO_ENTRANCE.MAX_DURATION).toBeLessThan(1)
   })
 })

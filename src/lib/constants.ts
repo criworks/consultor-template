@@ -27,4 +27,10 @@ export const HERO_BG = {
   OPACITY: 0.4,       // image opacity at scroll end
 } as const
 
-export const SPLASH_CIRCUMFERENCE = 50.2655 as const
+// Hero entrance — content is readable before JS runs; the entrance only
+// lifts it from a dimmed state. Keep START_OPACITY in sync with hero-initial.css.
+export const HERO_ENTRANCE = {
+  START_OPACITY: 0.6, // visible even if JS never runs
+  OFFSET_Y: 16,       // px the text rises during the entrance
+  MAX_DURATION: 0.8,  // s, whole cascade — never blocks reading
+} as const

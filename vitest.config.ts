@@ -1,6 +1,6 @@
 import { getViteConfig } from 'astro/config'
 import { defineConfig } from 'vitest/config'
-import { fileURLToPath, URL } from 'url'
+import { fileURLToPath, URL } from 'node:url'
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 
