@@ -1,0 +1,22 @@
+---
+import type { HTMLAttributes, HTMLTag } from 'astro/types'
+
+type Props = HTMLAttributes<'div'> & {
+  tag?: HTMLTag
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+}
+
+const { tag: Tag = 'div', maxWidth = 'xl', class: className, ...attrs } = Astro.props
+
+const widths = {
+  sm: 'max-w-2xl',
+  md: 'max-w-4xl',
+  lg: 'max-w-6xl',
+  xl: 'max-w-7xl',
+  full: 'max-w-none',
+}
+---
+
+<Tag class:list={['mx-auto w-full px-6 mobile:px-10', widths[maxWidth], className]} {...attrs}>
+  <slot />
+</Tag>
