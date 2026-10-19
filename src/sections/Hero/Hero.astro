@@ -1,0 +1,111 @@
+---
+// First screen of the home and every landing. Content is server-rendered and
+// readable before JS: hero-initial.css only dims it, and the entrance lifts it
+// (see Hero.anim.ts). The background image lives in the page, not here, so it
+// can stay fixed while the sections scroll over it.
+//
+// `intro` decides the entrance (lib/intro.ts): 'none', 'subtle' (once per
+// session) or 'full' (every visit, with the image settling in).
+import { Header } from '@/components/composed'
+import { Link } from '@/components/ui'
+import { site } from '@/config'
+import type { Content, IntroMode } from '@/data'
+
+interface Props {
+  copy: Content
+  /** Links to this page in the other languages. */
+  languages: readonly { label: string; href: string; locale: string }[]
+  intro: IntroMode
+}
+
+const { copy, languages, intro } = Astro.props
+---
+
+<section id="hero" class="hero relative flex h-dvh flex-col overflow-hidden px-6 pb-8 mobile:px-10" data-intro-mode={intro}>
+  <Header
+    nav={copy.nav}
+    navLabel={copy.ui.mainNavigation}
+    openMenuLabel={copy.ui.openMenu}
+    email={site.email}
+    emailLabel={copy.ui.email}
+    copyEmailLabel={copy.ui.copyEmail}
+    copiedMessage={copy.ui.emailCopied}
+    languages={languages}
+  />
+
+  <div class="flex min-h-0 flex-1 flex-col justify-end gap-4 pb-15 narrow:pl-[25%]">
+    <p class="text-sm font-semibold leading-none text-accent mobile:text-base" data-animate="hero-tagline">
+      {copy.hero.tagline}
+    </p>
+    <h1 class="font-display text-hero-title font-bold leading-hero tracking-hero text-balance" data-animate="hero-title">
+      {copy.hero.title}
+    </h1>
+    <div class="flex flex-wrap items-center gap-5 mobile:gap-11" data-animate="hero-social">
+      {site.social.map(link => <Link variant="tertiary" label={link.label} href={link.href} />)}
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-6 narrow:pl-[25%]">
+    <p class="max-w-60 text-base font-semibold leading-sub mobile:max-w-93 mobile:text-2xl" data-animate="hero-sub">
+      {copy.hero.subtitle}
+    </p>
+    <div data-animate="hero-cta">
+      <Link variant="primary" label={copy.hero.cta} href={copy.hero.ctaHref} />
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Sticky only when the scroll animation can fade the hero out; otherwise
+     the next section would scroll over visible hero text. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(:root.js) .hero {
+      position: sticky;
+      top: 0;
+    }
+  }
+</style>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { INTRO_SEEN_KEY, shouldPlayEntrance } from '@/lib/intro'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import type { IntroMode } from '@/data'
+  import { createHeroEntrance, createHeroScroll, setHeroFinal } from './Hero.anim'
+
+  const hero = document.getElementById('hero')
+
+  function readSeen(): boolean {
+    try {
+      return sessionStorage.getItem(INTRO_SEEN_KEY) === '1'
+    } catch {
+      return false
+    }
+  }
+
+  function markSeen(): void {
+    try {
+      sessionStorage.setItem(INTRO_SEEN_KEY, '1')
+    } catch {
+      // Storage blocked (private mode): the entrance just plays again.
+    }
+  }
+
+  if (hero && !prefersReducedMotion()) {
+    const gsap = initGsap()
+    const mode = (hero.dataset.introMode ?? 'subtle') as IntroMode
+    const next = hero.nextElementSibling
+
+    const startScroll = () => {
+      if (next) requestAnimationFrame(() => createHeroScroll(gsap, next))
+    }
+
+    if (shouldPlayEntrance(mode, readSeen(), false)) {
+      markSeen()
+      createHeroEntrance(gsap, mode === 'full').eventCallback('onComplete', startScroll)
+    } else {
+      setHeroFinal(gsap)
+      startScroll()
+    }
+  }
+</script>

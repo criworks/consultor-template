@@ -1,0 +1,44 @@
+---
+// Short centered statement that names the visitor's problem, shown over the
+// blurred hero image. Ported from consultant-web's Intro.
+import type { StatementContent } from '@/data'
+
+interface Props {
+  copy: StatementContent
+}
+
+const { copy } = Astro.props
+---
+
+<section id="statement" class="statement relative flex min-h-dvh items-center justify-center px-6 py-32 text-center mobile:px-10">
+  <div class="flex max-w-5xl flex-col items-center font-display text-2xl font-semibold leading-intro tracking-hero mobile:text-intro">
+    <p class="text-foreground" data-animate="statement-text">{copy.lead}</p>
+    <div class="mt-6 flex flex-col items-center text-accent">
+      {copy.lines.map(line => <p data-animate="statement-text">{line}</p>)}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Without the scroll animation the hero image is not blurred behind this
+     section, so give it a solid background to keep the text legible. */
+  .statement {
+    background: var(--color-background);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(:root.js) .statement {
+      background: transparent;
+    }
+  }
+</style>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createStatementReveal } from './Statement.anim'
+
+  const section = document.getElementById('statement')
+  if (section && !prefersReducedMotion()) {
+    createStatementReveal(initGsap(), section)
+  }
+</script>
