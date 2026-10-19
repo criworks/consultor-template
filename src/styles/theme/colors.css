@@ -1,6 +1,6 @@
-/* Color tokens — driven by ThemeStyle.astro from config/theme.ts.
-   These are compile-time fallbacks; ThemeStyle overrides them at runtime
-   via CSS custom properties injected in <head>. */
+/* Color and font tokens — fallbacks only. ThemeStyle.astro overrides them
+   from config/theme.ts with an unlayered :root rule in <head>, so change
+   values there, not here. */
 @theme {
   --color-background: #000000;
   --color-foreground: #ffffff;
