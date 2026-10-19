@@ -1,45 +1,64 @@
 # Implementation Phases — consultor-template
 
 Handoff document for each implementation chat.
-Read "Stack & Architecture" once, then jump to your phase.
+Read "Product model" and "Stack & Architecture" once, then jump to your phase.
+
+---
+
+## Product model
+
+- **consultor-template is the paid "pro" product.** It only ever contains code and demo content. Its git history must never include anyone's personal data, photos, or copy.
+- **The author's own site is a separate repo** created from this template (`criworks/criworks-web`), with this repo as its `upstream` remote. Personal content lives only there, and only in `src/config/`, `src/profiles/` and `src/assets/`. Template improvements are made here and pulled into the site with `git pull upstream main`.
+- **Paid distribution is a zip without `.git`** (`git archive`), one zip per version with a CHANGELOG.
+- **A free "lite" version** (open source, MIT) is derived later as a smaller product. It is not this template.
 
 ---
 
 ## Stack & Architecture
 
-- **Astro 6.3.7** — SSG. Pages in `src/pages/`. No server rendering.
+- **Astro 7** — SSG. Pages in `src/pages/`. No server rendering. Built-in i18n routing.
+- **Vite 8** — comes with Astro. No `overrides`.
 - **Tailwind CSS v4** — configured via `@theme` blocks in CSS. Plugin via `@tailwindcss/vite`. No `tailwind.config.js`.
-- **GSAP 3.15 + ScrollTrigger** — all animations. Singleton in `src/lib/gsap.ts` via `initGsap()`. **No Lenis** — GSAP handles smooth scroll needs directly.
-- **TypeScript strict** — `noUncheckedIndexedAccess: true`. Path aliases: `@/lib`, `@/config`, `@/components`, `@/sections`, `@/data`, `@/layouts`, `@/styles`, `@/assets`.
-- **Vitest 3** — unit tests in `src/__tests__/`. jsdom environment. `getViteConfig` from `astro/config` for Vite 7 compatibility.
+- **GSAP 3.15 + ScrollTrigger** — all animations. Singleton in `src/lib/gsap.ts` via `initGsap()`. **No Lenis.**
+- **TypeScript strict** (TS 5.9 or 6; `@astrojs/check` does not support TS 7 yet) — `noUncheckedIndexedAccess: true`. Path aliases: `@/lib`, `@/config`, `@/components`, `@/sections`, `@/data`, `@/layouts`, `@/styles`, `@/assets`, `@/profiles`.
+- **Vitest 5** — unit tests in `src/__tests__/`. jsdom environment. `getViteConfig` from `astro/config`.
+- **Node** — `>=22.22.0`, `.nvmrc` on 24. CI runs on Node 22, 24 and 26.
+- **Font** — Switzer variable (Fontshare). Confirm the Fontshare license allows shipping the files in a paid product before Phase 10.
 
 ### Key architectural decisions
 
-1. **Config layer**: all buyer customization in `src/config/` (site.ts, theme.ts, content.ts, sections.ts). No strings in components.
-2. **ThemeStyle.astro**: reads `config/theme.ts` and emits CSS vars in `<head>`. Color values are NEVER hardcoded in CSS files.
-3. **Sections in `src/sections/`**: each section has its own folder with `{Name}.astro` + `{Name}.anim.ts`. NOT in `components/`.
-4. **Animation ownership**: each section declares its own scroll animation in `{Name}.anim.ts`. The page orchestrator in `pages/index.astro` composes them. No monolithic scroll timeline.
-5. **`data-animate` pattern**: GSAP selects elements via `[data-animate="section-element"]`. Never animate by class that also has styles.
-6. **`satisfies` typing**: config data typed as `value satisfies Type[]`, enabling intellisense without losing `as const` inference.
-7. **No custom grid**: standard Tailwind layout utilities. No `site-col-*` system, no grid generator script.
-8. **Hero image**: full-bleed wide panoramic image. Animated via GSAP `x` + `filter:blur()` during scroll (pan left + blur). No floating PNG overlay. No gradient blob.
+1. **Three layers, never mixed**: template code (`components/`, `sections/`, `lib/`, `layouts/`, `styles/`), brand (`config/`, `assets/`), audience profiles (`profiles/`). A brand or profile need that requires editing a component becomes a config option or a new reusable section.
+2. **Config layer**: all buyer customization in `src/config/` (site.ts, theme.ts, content.ts, sections.ts). No strings in components.
+3. **Profiles**: one file per audience landing in `src/profiles/`. A profile only declares what differs from the base content (slug, sections, copy overrides, featured projects, SEO, intro mode). `pages/[...profile].astro` generates one page per profile and locale.
+4. **i18n from the start**: content is keyed by locale (`es`, `en`). Default locale at `/`, the other under its prefix (`/en/...`). Adding it later would change the config shape.
+5. **ThemeStyle.astro**: reads `config/theme.ts` and emits CSS vars in `<head>`. Color values are NEVER hardcoded in CSS files.
+6. **Sections in `src/sections/`**: each section has its own folder with `{Name}.astro` + `{Name}.anim.ts`. NOT in `components/`.
+7. **Animation ownership**: each section declares its own scroll animation in `{Name}.anim.ts`. The page orchestrator composes them. No monolithic scroll timeline.
+8. **`data-animate` pattern**: GSAP selects elements via `[data-animate="section-element"]`. Never animate by class that also has styles.
+9. **Content first, motion second**: no splash loader. The hero is readable at first paint and without JS (`hero-initial.css` dims, never hides). The entrance lasts under 0.8 s (`HERO_ENTRANCE`), plays once per session, and is skipped with reduced motion. Intro intensity is per profile: `'none' | 'subtle' | 'full'`.
+10. **`satisfies` typing**: config data typed as `value satisfies Type`, enabling intellisense without losing `as const` inference.
+11. **No custom grid**: standard Tailwind layout utilities. No `site-col-*` system, no grid generator script.
+12. **Hero image**: full-bleed wide panoramic image, AVIF/WebP via `<Image>`, `loading="eager"`. Animated via GSAP `x` + `filter:blur()` during scroll (pan left + blur). Target: LCP < 2 s on mobile.
 
 ### Directory map
 ```
 src/
-├── config/       ← buyer zone (site, theme, content, sections)
+├── config/       ← brand zone (site, theme, content per locale, sections)
+├── profiles/     ← one file per audience landing + _template.ts
 ├── assets/
-│   └── images/   ← portrait.png, hero-bg.{jpg,webp}, work-{slug}.png
+│   └── images/   ← hero-bg, portrait, work-{slug} (demo placeholders here)
 ├── components/
-│   ├── ui/       ← Button, Link, Badge, Tag, Toast
-│   ├── layout/   ← ThemeStyle, Container, Stack
+│   ├── ui/       ← Button, Link, Badge, Toast
+│   ├── layout/   ← ThemeStyle, Container, Stack, Seo
+│   ├── header/   ← Header
 │   └── composed/ ← SectionHeader, ProjectCard, NavDrawer
 ├── sections/     ← one folder per section + _template/
 ├── pages/
 │   ├── index.astro
+│   ├── [...profile].astro
 │   └── work/[slug].astro
 ├── data/         ← types.ts, projects.ts
-├── lib/          ← constants, gsap, motion, animations/
+├── lib/          ← constants, gsap, motion, i18n, animations/
 ├── layouts/      ← BaseLayout, PageLayout
 └── styles/
     ├── global.css
@@ -69,13 +88,10 @@ The Cursor linter (and Tailwind IntelliSense) warns when an arbitrary value has 
 | `text-[16px]` | `text-base` |
 | `[grid-column-end:-1]` | `-col-end-1` |
 
-**How to check**: before using `[n]` syntax, verify whether the value maps to a Tailwind scale step. Tailwind spacing scale: 1 unit = 4px. So `[24px]` = `6`, `[32px]` = `8`, etc. For `w-`, `h-`, `max-w-`, `gap-`, `p-`, `m-` check the scale before using brackets.
+**How to check**: before using `[n]` syntax, verify whether the value maps to a Tailwind scale step. Tailwind spacing scale: 1 unit = 4px. So `[24px]` = `6`, `[32px]` = `8`, etc.
 
 **CR-T2: Only use `[]` syntax when no named equivalent exists.**
-Examples where arbitrary IS correct:
-- `max-w-[860px]` — no named equivalent for 860px
-- `top-[40px]` — no named equivalent (40px = 10, but check if `top-10` matches the design intent)
-- `w-auto`, `h-dvh` — always prefer semantic utilities over computed sizes
+Example where arbitrary IS correct: `max-w-[860px]` — no named equivalent for 860px.
 
 **CR-T3: Prefer semantic size utilities over computed ones.**
 - `h-dvh` over `h-[100dvh]`
@@ -84,52 +100,81 @@ Examples where arbitrary IS correct:
 
 ---
 
-## Phase 1 — Foundation ✅ COMPLETE
+## Phase overview
 
-**Goal**: Repo init, tooling config, lib utilities, styles skeleton.
+| Phase | Scope | Done when |
+|---|---|---|
+| 1. Foundation ✅ | Repo, tooling, lib utilities, styles skeleton | — |
+| 2. Cleanup + CI ✅ | Unused deps and fonts out, Astro 7, readable hero without JS, CI | CI green on `main` |
+| 3. Config, profiles, i18n | Types, config per locale, profiles, ThemeStyle, routes | Two demo profiles build in ES and EN |
+| 4. Layouts + UI (port) | BaseLayout with Seo, primitives ported from consultant-web | Sample page shows every component |
+| 5. Header, Hero, intro (port) | Header, Hero entrance, scroll pan+blur, intro modes | Hero readable at 0 ms, LCP < 2 s mobile |
+| 6. Sections | Work, About, Proof, Services, Contact, `_template/`, `work/[slug]` | Full home driven by config |
+| 7. Author site + deploy | `criworks-web` repo from the template, real content, deploy | Author site in production |
+| 8. Leads + analytics | Form, booking link, cookieless analytics, events per profile | Leads and visits visible per landing |
+| 9. Real use | Remaining landings, copy tuned with data, fixes made here | Weeks without structural changes |
+| 10. Store | Demo content, packaging, docs, license, CHANGELOG | v1.0 zip ready |
 
-**Commits done**:
-- `chore: init astro 6 project with typescript strict and vite 7`
-- `chore: add placeholder page and copy Switzer variable font`
-- `feat(styles): add global css, fonts, reset, theme tokens, and animation base`
-- `feat(lib): add animation constants, motion utilities, and gsap singleton`
-- `test: add unit tests for constants and motion — 9 passing`
-- `docs: add PHASES.md — phased plan with updated architecture`
-
-**What exists after Phase 1**:
-- All config files: `package.json`, `astro.config.mjs`, `tsconfig.json`, `vitest.config.ts`
-- `src/lib/`: `constants.ts` (with HERO_BG, SPLASH_CIRCUMFERENCE — no GRID_CONFIG), `gsap.ts`, `motion.ts`, `index.ts`. **No lenis.ts.**
-- `src/styles/`: `global.css`, `base/fonts.css`, `base/reset.css`, `theme/colors.css`, `theme/typography.css`, `theme/layout.css` (breakpoints only), `animations/backdrop.css` (intro-backdrop only), `animations/hero-initial.css`
-- `src/__tests__/`: 9 tests passing
-- `src/pages/index.astro`: placeholder
-- `public/fonts/`: Switzer Variable woff2 files
-
-**Switzer fonts location**: `public/fonts/Switzer-Variable.woff2` and `public/fonts/Switzer-VariableItalic.woff2`.
+`criworks-website` (local only) can be deleted after Phase 2. `criworks/consultant-web` is archived after Phase 5, once Header, Hero, Link, Button and images live in the template or the author site.
 
 ---
 
-## Phase 2 — Config layer + Design system tokens
+## Phase 1 — Foundation ✅ COMPLETE
 
-**Goal**: The buyer-facing config layer, ThemeStyle injector, and type definitions.
+Repo init, tooling config, lib utilities (`constants`, `gsap`, `motion`), styles skeleton, Switzer variable font, unit tests.
 
-**Files to create**:
+---
+
+## Phase 2 — Cleanup + CI ✅ COMPLETE
+
+- Removed the 20 unused static Switzer files (the variable files cover every weight).
+- Removed `tsx`, `@vitest/ui` and the `vite` override. Moved `@astrojs/check` and `typescript` to devDependencies. Added `npm run check`.
+- Upgraded Astro 6 → 7 and Vitest 3 → 5: Astro ≤ 7.2.7 and Vitest ≤ 4.1.10 have security advisories with no fix on the old majors. `npm audit` is clean.
+- `engines.node` is `>=22.22.0` (Astro 7 minimum); `.nvmrc` is 24.
+- Replaced `SPLASH_CIRCUMFERENCE` with `HERO_ENTRANCE`. `hero-initial.css` dims the hero only when `<html>` has the `js` class, so content is readable without JS.
+- Fixed the `matchMedia` tests (jsdom has no `matchMedia`; tests stub it).
+- Added `.github/workflows/ci.yml`: `npm ci`, `check`, `test:run`, `build` on Node 22, 24, 26.
+
+---
+
+## Phase 3 — Config layer, profiles, i18n
+
+**Goal**: the buyer-facing config layer with locales, the profile layer, ThemeStyle, and the routes that generate one page per profile and locale.
+
+### `astro.config.mjs`
+```js
+i18n: { locales: ['es', 'en'], defaultLocale: 'es', routing: { prefixDefaultLocale: false } }
+```
+Buyers change `locales` and `defaultLocale` in one place; keep them mirrored in `config/site.ts`.
 
 ### `src/data/types.ts`
 All interfaces with `readonly` properties:
 ```ts
+export type Locale = 'es' | 'en'
+export type Localized<T> = Readonly<Record<Locale, T>>
+
 export interface NavItem { readonly label: string; readonly href: string }
 export interface SocialLink { readonly label: string; readonly href: string }
 export interface HeroContent { readonly title: string; readonly subtitle: string; readonly cta: string }
 export interface SectionContent { readonly title: string; readonly subtitle?: string }
 export interface AboutContent extends SectionContent { readonly bio: string; readonly skills: readonly string[] }
+export interface ProofContent { readonly role: string; readonly years: number; readonly specialties: readonly string[]; readonly availability: string; readonly timezone: string; readonly languages: readonly string[]; readonly cvUrl?: string }
 export interface ContactContent { readonly title: string; readonly tagline: string; readonly cta: string }
 export interface UIStrings {
   readonly emailCopied: string
-  readonly loading: string
   readonly openMenu: string
   readonly closeMenu: string
   readonly viewProject: string
   readonly backToHome: string
+  readonly downloadCv: string
+}
+export interface Content {
+  readonly hero: HeroContent
+  readonly proof: ProofContent
+  readonly work: SectionContent
+  readonly about: AboutContent
+  readonly contact: ContactContent
+  readonly ui: UIStrings
 }
 export interface ProjectItem {
   readonly slug: string
@@ -150,330 +195,243 @@ export interface Palette {
 }
 export interface SiteConfig {
   readonly name: string
-  readonly role: string
-  readonly tagline: string
   readonly email: string
-  readonly locale: string
-  readonly seo: { readonly title: string; readonly description: string; readonly url: string; readonly image: string }
-  readonly nav: readonly NavItem[]
+  readonly locales: readonly Locale[]
+  readonly defaultLocale: Locale
+  readonly seo: { readonly url: string; readonly image: string }
+  readonly nav: Localized<readonly NavItem[]>
   readonly social: readonly SocialLink[]
-  readonly features: { readonly smoothScroll: boolean; readonly splashLoader: boolean; readonly reducedMotion: boolean }
+}
+export type IntroMode = 'none' | 'subtle' | 'full'
+export interface Profile {
+  readonly slug: string                       // URL path, e.g. 'contractor/cto'
+  readonly audience: string                   // internal note, not rendered
+  readonly sections: readonly SectionName[]   // order on the page
+  readonly content?: Partial<Localized<DeepPartial<Content>>>
+  readonly projects?: readonly string[]       // featured project slugs
+  readonly seo: Localized<{ readonly title: string; readonly description: string }>
+  readonly intro: IntroMode
 }
 ```
+`SectionName` comes from `config/sections.ts`; add a small `DeepPartial` helper in the same file.
 
-### `src/data/projects.ts`
-2–3 placeholder `ProjectItem[]`. Mark clearly as placeholders.
+### `src/data/projects.ts` + `src/data/index.ts`
+2–3 placeholder `ProjectItem[]`, clearly marked as demo. Barrel exports.
 
-### `src/data/index.ts`
-Barrel: `export * from './types'` + `export * from './projects'`
+### `src/config/`
+- `site.ts` — `SiteConfig` with demo values (`Your Name`, `you@yourdomain.com`).
+- `theme.ts` — `PALETTES` (teal-dark, sage-light, warm-dark, mono-light) + `activePalette` + `typography`.
+- `content.ts` — `Localized<Content>`: the default (home) copy for every locale.
+- `sections.ts` — `export const sectionNames = ['hero', 'proof', 'work', 'about', 'contact'] as const` and `homeSections`.
+- `index.ts` — barrel.
 
-### `src/config/site.ts`
-```ts
-import type { SiteConfig, NavItem, SocialLink } from '@/data'
-export const site = {
-  name: 'Your Name',
-  role: 'Consultant',
-  tagline: 'Based in your city.',
-  email: 'you@yourdomain.com',
-  locale: 'en',
-  seo: {
-    title: 'Your Name — Consultant',
-    description: 'Short description of your work.',
-    url: 'https://yourdomain.com',
-    image: '/og-image.png',
-  },
-  nav: [
-    { label: 'Work',    href: '#work' },
-    { label: 'About',   href: '#about' },
-    { label: 'Contact', href: '#contact' },
-  ] satisfies NavItem[],
-  social: [
-    { label: 'LinkedIn',  href: 'https://linkedin.com/in/...' },
-    { label: 'Instagram', href: 'https://instagram.com/...' },
-  ] satisfies SocialLink[],
-  features: { smoothScroll: true, splashLoader: true, reducedMotion: true },
-} as const satisfies SiteConfig
-```
+### `src/profiles/`
+- `_template.ts` — fully commented; copy it to create a landing.
+- Two demo profiles, e.g. `hiring-manager.ts` (`intro: 'none'`) and `agency.ts` (`intro: 'full'`).
+- `index.ts` — loads every profile with `import.meta.glob('./*.ts', { eager: true })`, skipping `_template.ts`, and throws at build time on duplicate slugs.
 
-### `src/config/theme.ts`
-Export `PALETTES` record (4 palettes: teal-dark, sage-light, warm-dark, mono-light) + `activePalette` + `typography` + no spacing (grid removed). Palette type: matches `Palette` interface from data/types.ts.
-
-### `src/config/content.ts`
-All section text. Keys: `hero`, `work`, `about`, `contact`, `ui`. Use `satisfies` typing against the interfaces.
-
-### `src/config/sections.ts`
-```ts
-export const homeSections = ['hero', 'work', 'about', 'contact'] as const
-export type SectionName = typeof homeSections[number]
-```
-
-### `src/config/index.ts`
-Barrel: export all config.
+### `src/lib/i18n.ts`
+- `resolveContent(locale, profile?)` — deep-merges the profile override over `content[locale]`.
+- `localizedPath(locale, path)` — adds the locale prefix when it is not the default.
+- Unit tests for both, including the "profile overrides only one field" case.
 
 ### `src/components/layout/ThemeStyle.astro`
-Reads `activePalette` and `typography` from `@/config`. Emits `<style define:vars={...}>` with all CSS vars. Maps palette keys to `--color-*` vars. Typography maps to `--font-sans`, `--font-display`.
+Reads `activePalette` and `typography` from `@/config`. Emits `<style define:vars={...}>` with all CSS vars. Update `src/styles/theme/colors.css` so values are `var(--color-*)` references.
 
-Update `src/styles/theme/colors.css` so all values are `var(--color-*)` references, since ThemeStyle now drives the actual values.
-
-**Commits for Phase 2**:
-```
-feat(data): add type definitions for all config and data shapes
-feat(data): add placeholder projects data
-feat(config): add site, theme, content, and sections config files
-feat(components): add ThemeStyle — config/theme.ts to CSS vars injector
-```
-
----
-
-## Phase 3 — Layouts + UI primitives
-
-**Goal**: BaseLayout, PageLayout, and all UI components. Dev server renders a styled placeholder.
-
-**Files to create**:
-
-### `src/layouts/BaseLayout.astro`
-- Imports `@/styles/global.css`
-- Injects `<ThemeStyle />` in `<head>`
-- Uses `site.seo.*` for meta tags
-- Inline script: `history.scrollRestoration = 'manual'`
-- **No Lenis** — no initLenis() call
-- Props: `title`, `description`, `image`
-
-### `src/layouts/PageLayout.astro`
-Wraps BaseLayout. Adds fixed nav at top for inner pages.
-
-### `src/layouts/index.ts`
-Barrel.
-
-### `src/components/layout/Container.astro`
-Max-width centered wrapper. Props: `maxWidth`, `tag`.
-
-### `src/components/layout/Stack.astro`
-Flex column with `gap` prop.
-
-### `src/components/layout/index.ts`
-Barrel: Container, Stack, ThemeStyle.
-
-### `src/components/ui/Button.astro`
-Props: `variant` ('primary' | 'secondary' | 'ghost'), `icon`, `size`, `type` (default 'button').
-
-### `src/components/ui/Link.astro`
-Three variants:
-- `primary`: CTA with icon in circle
-- `secondary`: nav link with optional `active` dot
-- `tertiary`: social link — dot mode if `active` prop passed, arrow+`_blank` if absent
-
-### `src/components/ui/Badge.astro`
-Props: `label`, `color` ('default' | 'accent').
-
-### `src/components/ui/Toast.astro`
-Fixed toast container. DOM id: `toast`, inner `#toast-message`.
-
-### `src/components/ui/index.ts`
-Barrel.
-
-### `src/components/composed/SectionHeader.astro`
-Props: `eyebrow`, `title`, `subtitle`.
-
-### `src/components/composed/ProjectCard.astro`
-Props: `project` (ProjectItem). `data-animate="work-card"`.
-
-### `src/components/composed/NavDrawer.astro`
-Mobile overlay. Animated open/close via GSAP in `<script>` inside component.
-
-### `src/components/composed/index.ts` + `src/components/index.ts`
-Barrels.
-
-Update `src/pages/index.astro` to use `BaseLayout`. Confirm dev server renders.
+### Pages
+- `src/pages/index.astro` and `src/pages/[...profile].astro` with `getStaticPaths` over locales × profiles. Placeholder markup only (the real layout comes in Phase 4); print the resolved title and section list.
 
 **Commits for Phase 3**:
 ```
-feat(layouts): add BaseLayout and PageLayout
-feat(components): add Container and Stack layout primitives
-feat(components): add Link, Button, Badge, and Toast ui primitives
-feat(components): add SectionHeader, ProjectCard, and NavDrawer composed components
+feat(data): add type definitions including Locale and Profile
+feat(config): add site, theme, localized content, and sections config
+feat(profiles): add profile loader, _template, and two demo profiles
+feat(lib): add i18n helpers with content merge and localized paths
+feat(components): add ThemeStyle — config/theme.ts to CSS vars injector
+feat(pages): generate one page per profile and locale
 ```
 
 ---
 
-## Phase 4 — Splash + Hero sections
+## Phase 4 — Layouts + UI primitives (port from consultant-web)
 
-**Goal**: Splash loader, Hero section, Header, and page-level animation orchestration.
-Splash exits → hero text cascades in → scroll drives bg pan + blur + intro fade.
+**Goal**: BaseLayout, PageLayout, Seo, and all UI components. Port behavior and look from `criworks/consultant-web` (branch `development`), adapted to these rules: strings from config, colors from tokens, no `site-col-*` grid.
 
-**IMPORTANT: Hero image is a full-bleed wide panoramic background image (no floating PNG, no gradient blob).**
+### `src/components/layout/Seo.astro`
+Props: `title`, `description`, `image`, `locale`, `path`. Emits title, description, canonical, Open Graph, Twitter card, `hreflang` alternates for every locale, and JSON-LD (`Person` + `ProfessionalService`).
 
-### Hero image structure in `pages/index.astro`
-```astro
-<!-- Full-bleed hero background — wide panoramic, animated by GSAP during scroll -->
-<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-  <img
-    src={heroBg}
-    alt=""
-    data-animate="hero-bg"
-    loading="eager"
-    class="h-dvh w-auto max-w-none"
-  />
-</div>
+### `src/layouts/BaseLayout.astro`
+- Imports `@/styles/global.css`, injects `<ThemeStyle />` and `<Seo />` in `<head>`.
+- `<html lang={locale}>`.
+- Inline script in `<head>`: `document.documentElement.classList.add('js')` and `history.scrollRestoration = 'manual'`.
+- Preloads the Switzer variable font.
+- **No Lenis.**
 
-<!-- Intro backdrop — starts invisible, GSAP drives opacity + blur during scroll -->
-<div
-  class="fixed inset-0 z-10 pointer-events-none"
-  data-animate="intro-backdrop"
-/>
+### `src/layouts/PageLayout.astro`
+Wraps BaseLayout. Adds the fixed nav for inner pages.
 
-<main class="relative z-40">
-  <Hero />
-  {/* other sections added in Phase 5 */}
-</main>
-```
+### `src/components/layout/`
+`Container.astro` (props `maxWidth`, `tag`), `Stack.astro` (`gap`), barrel.
 
-The hero bg image has a wide natural aspect ratio (≥3:1). At `h-dvh w-auto max-w-none`, it fills the full viewport height and extends wide naturally. During scroll, GSAP translates it left by `HERO_BG.PAN_X` (-320px) and applies blur.
+### `src/components/ui/`
+- `Link.astro` — port from consultant-web. Variants `primary` (CTA with icon in circle), `secondary` (nav link with optional `active` dot), `tertiary` (social: dot mode if `active` is passed, arrow + `_blank` otherwise). Type `icon` properly instead of `any`.
+- `Button.astro` — port and extend: `variant` ('primary' | 'secondary' | 'ghost'), `icon`, `size`, `type` (default 'button').
+- `Badge.astro` — `label`, `color` ('default' | 'accent').
+- `Toast.astro` — fixed container, ids `toast` / `toast-message`.
+- Barrel.
 
-**No accent-gradient-block. No hero-backdrop div. No floating-image div.**
-
-### `src/lib/animations/shared.ts`
-```ts
-// runSplashExit({ gsap, pill, imgWrap, onComplete }) — uses SPLASH_CIRCUMFERENCE
-// showToast({ gsap, message }), hideToast({ gsap })
-```
-
-### `src/lib/animations/index.ts`
-Barrel.
-
-### `src/sections/Splash/`
-- `Splash.astro`: Fixed overlay (`z-splash`), pill with SVG progress arc (`r=8`, `strokeDasharray=SPLASH_CIRCUMFERENCE`), optional background portrait preview. DOM ids: `splash-loader`, `splash-arc`, `splash-pct`, `splash-pill`, `splash-img-wrap`.
-- `index.ts`
-
-### `src/sections/Hero/`
-- `Hero.astro`: `section#hero sticky top-0 h-dvh overflow-hidden`. Text is layered over the fixed bg image. Uses Tailwind flex/grid utilities (no custom site-col-* classes). Content from `content.hero.*`. Includes `<Header />` at top. Uses `data-animate` attrs throughout.
-- `Hero.anim.ts`: exports:
-  - `createHeroEntrance({ gsap, paused })` — cascading text entrance (stagger 0.12s title, -0.3 sub, -0.36 chrome, -0.18 cta). All `power3.out`.
-  - `createScrollAnimation({ gsap, trigger, isMobile })` — scrub:1 timeline:
-    - `[data-animate="hero-bg"]`: `x: HERO_BG.PAN_X`, `filter: blur(HERO_BG.BLUR_ENTER)px` then `blur(HERO_BG.BLUR_EXIT)px` in 2 phases, `opacity: HERO_BG.OPACITY`
-    - `[data-animate="intro-backdrop"]`: opacity → 1, blur → 40px in 2 phases
-    - Hero text elements: fade out in 3 staggered groups
-    - `[data-animate="intro-text"]`: fade in from `y:50`
-- `index.ts`
-
-### `src/components/header/Header.astro`
-Nav links from `site.nav`. Contact button with email obfuscation (split on `@`, assembled in JS via `dataset.u` + `dataset.d`). Mobile hamburger. GSAP toast on email copy. Script in component.
-
-### Splash animation sequence in `pages/index.astro`
-```ts
-runSplash(() => {
-  if (!shouldAnimateByPreference()) return
-
-  const introEl = document.querySelector('#intro')
-  const isMobile = window.matchMedia('(width < 721px)').matches
-
-  const heroTl = createHeroEntrance({ gsap, paused: true })
-  heroTl.eventCallback('onComplete', () => {
-    if (introEl) {
-      requestAnimationFrame(() => {
-        createScrollAnimation({ gsap, trigger: introEl, isMobile })
-      })
-    }
-  })
-
-  // No floating image entrance — splash exits directly into hero text
-  heroTl.play()
-})
-```
-
-Note: hero text plays immediately after splash exits (no image entrance animation).
+### `src/components/composed/`
+`SectionHeader.astro` (`eyebrow`, `title`, `subtitle`), `ProjectCard.astro` (`project`, `data-animate="work-card"`), `NavDrawer.astro` (mobile overlay, port from consultant-web, GSAP open/close), barrels.
 
 **Commits for Phase 4**:
 ```
-feat(lib): add shared animation utilities — splash exit and toast
-feat(sections): add Splash section with progress arc
-feat(sections): add Hero section markup and Tailwind layout
-feat(sections): add Hero animations — entrance and scroll timeline with bg pan+blur
-feat(components): add Header with email obfuscation and toast integration
-feat(pages): wire index.astro — hero bg image, fixed layers, splash→hero sequence
+feat(components): add Seo with canonical, hreflang, OG, and JSON-LD
+feat(layouts): add BaseLayout and PageLayout
+feat(components): add Container and Stack layout primitives
+feat(components): port Link and Button; add Badge and Toast
+feat(components): add SectionHeader, ProjectCard, and NavDrawer
 ```
-
-**After Phase 4**: `npm run dev` shows splash → hero text cascading → scroll pans bg image left + blurs, intro text fades in.
 
 ---
 
-## Phase 5 — Remaining sections + _template + complete orchestration
+## Phase 5 — Header, Hero, intro (port from consultant-web)
 
-**Goal**: Work, About, Contact sections. `_template/` for buyer extensibility. Full page wired.
+**Goal**: Header, Hero, and page-level animation orchestration. Hero text is readable at first paint → a short entrance lifts it → scroll drives bg pan + blur + intro fade.
 
-### `src/sections/Work/`
-- `Work.astro`: `section#work min-h-dvh`. `<SectionHeader>`. Grid of `<ProjectCard>` from `data/projects.ts`.
-- `Work.anim.ts`: `createWorkAnimation({ gsap, trigger })` — scroll-triggered entrance, stagger from y:32.
-- `index.ts`
+### Page structure (`index.astro` and `[...profile].astro`)
+```astro
+<!-- Full-bleed hero background — wide panoramic, animated by GSAP during scroll -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+  <Image src={heroBg} alt="" data-animate="hero-bg" loading="eager" class="h-dvh w-auto max-w-none" />
+</div>
 
-### `src/sections/About/`
-- `About.astro`: Bio, skills (`<Badge>`), portrait.
-- `About.anim.ts`: `createAboutAnimation({ gsap, trigger })`.
-- `index.ts`
+<!-- Intro backdrop — starts invisible, GSAP drives opacity + blur during scroll -->
+<div class="fixed inset-0 z-10 pointer-events-none" data-animate="intro-backdrop" />
 
-### `src/sections/Contact/`
-- `Contact.astro`: Title, tagline, email button, social links.
-- `Contact.anim.ts`: `createContactAnimation({ gsap, trigger })`.
-- `index.ts`
+<main class="relative z-40">
+  <Hero />
+  {/* sections from profile.sections */}
+</main>
+```
 
-### `src/sections/_template/`
-Both files fully commented step-by-step (copy this folder → rename → add to content.ts → register in sections.ts → add animation call in pages/index.astro).
+### `src/components/header/Header.astro`
+Port from consultant-web: nav links from `site.nav[locale]`, contact button with email obfuscation (split on `@`, assembled in JS via `dataset.u` + `dataset.d`), copy to clipboard with toast, hamburger + NavDrawer below the `narrow` breakpoint. Layout rebuilt with Tailwind flex/grid. All labels from `content.ui`. Add a language switcher using `localizedPath`.
 
-Update `pages/index.astro`: import and render Work, About, Contact. Add their `createXAnimation` calls inside `requestAnimationFrame` after hero timeline.
+### `src/lib/animations/shared.ts`
+`showToast({ gsap, message })`, `hideToast({ gsap })`. Barrel in `src/lib/animations/index.ts`.
+
+### `src/sections/Hero/`
+- `Hero.astro`: `section#hero sticky top-0 h-dvh overflow-hidden`. Text over the fixed bg image. Content from resolved content. `data-animate` attrs (`hero-title`, `hero-sub`, `hero-cta`, …) matching `hero-initial.css`.
+- `Hero.anim.ts`:
+  - `createHeroEntrance({ gsap, paused })` — port the cascade from consultant-web, from `opacity: HERO_ENTRANCE.START_OPACITY, y: HERO_ENTRANCE.OFFSET_Y`, total ≤ `HERO_ENTRANCE.MAX_DURATION`. `power3.out`.
+  - `createScrollAnimation({ gsap, trigger, isMobile })` — scrub:1 timeline: `hero-bg` pan `HERO_BG.PAN_X` + blur `BLUR_ENTER` → `BLUR_EXIT` + `OPACITY`; `intro-backdrop` opacity → 1, blur → 40px; hero text fades out in 3 groups; `intro-text` fades in from `y:50`.
+
+### Intro modes (from the profile)
+- `none` — no entrance; scroll animation only.
+- `subtle` (default) — entrance on the first visit of the session (`sessionStorage`), then direct.
+- `full` — entrance on every visit, plus the richer scroll sequence.
+Always skipped when `shouldAnimateByPreference()` is false.
+
+### Orchestration
+```ts
+if (shouldAnimateByPreference()) {
+  const heroTl = createHeroEntrance({ gsap, paused: true })
+  heroTl.eventCallback('onComplete', () => {
+    requestAnimationFrame(() => createScrollAnimation({ gsap, trigger: introEl, isMobile }))
+  })
+  introMode === 'none' || alreadySeen ? heroTl.progress(1) : heroTl.play()
+}
+```
 
 **Commits for Phase 5**:
 ```
-feat(sections): add Work section with project grid
-feat(sections): add About section with bio and portrait
-feat(sections): add Contact section
+feat(lib): add shared toast animation utilities
+feat(components): port Header with email obfuscation, toast, and mobile nav
+feat(sections): add Hero markup and layout
+feat(sections): add Hero entrance and scroll timeline with bg pan+blur
+feat(pages): wire hero layers, intro modes, and orchestration
+```
+
+**After Phase 5**: hero is readable before JS, the entrance takes under 0.8 s, scroll pans and blurs the bg, intro text fades in. LCP < 2 s on mobile (Lighthouse).
+
+---
+
+## Phase 6 — Sections + _template + project pages
+
+**Goal**: all home sections, `_template/` for buyer extensibility, project detail pages. Pages render the sections listed in the profile.
+
+### `src/sections/`
+- `Proof/` — the "in 10 seconds" block for hiring managers: role, years, specialties, availability, timezone, languages, "View work" and "Download CV" buttons.
+- `Work/` — `SectionHeader` + grid of `ProjectCard`, filtered by `profile.projects` when set. `createWorkAnimation({ gsap, trigger })`, stagger from y:32.
+- `About/` — bio, skills (`Badge`), portrait. `createAboutAnimation`.
+- `Services/` — what is offered and the process, in steps. `createServicesAnimation`.
+- `Contact/` — title, tagline, email button, social links. `createContactAnimation`.
+- `_template/` — both files commented step by step (copy folder → rename → add content type and copy → register in `config/sections.ts` → add the animation call).
+
+### `src/pages/work/[slug].astro`
+Dynamic route from `data/projects.ts`, per locale. `PageLayout`. Thumbnail, title, year, tags, description, links.
+
+### Demo assets
+Wide panoramic hero placeholder (≥ 3:1), portrait placeholder, work thumbnails, `favicon.svg`, `og-image.png` (1200×630).
+
+**Commits for Phase 6**:
+```
+feat(sections): add Proof section for hiring managers
+feat(sections): add Work, About, Services, and Contact sections
 feat(sections): add _template section for buyer extensibility
-feat(pages): complete index.astro — all sections and full animation orchestration
+feat(pages): add work/[slug] project detail page
+feat(assets): add demo placeholders, favicon, and og-image
 ```
 
 ---
 
-## Phase 6 — Inner pages + assets + buyer docs
+## Phase 7 — Author site + deploy
 
-**Goal**: Project detail page, placeholder assets, all buyer documentation. Ready to package.
+Done outside this repo, in `criworks/criworks-web`:
+- Create the repo from this template; add this repo as `upstream`.
+- Real content only in `src/config/`, `src/profiles/`, `src/assets/` (images exported to AVIF/WebP).
+- First three landings (e.g. hiring managers, CTOs, agencies) in ES and EN.
+- Domain, `@astrojs/sitemap`, `robots.txt`, static deploy (Cloudflare Pages or Vercel) with branch previews.
 
-### `src/pages/work/[slug].astro`
-Dynamic route from `data/projects.ts`. Uses `PageLayout`. Project hero (thumbnail), title, year, tags, description, links.
+Changes needed in this repo while doing it (new options, fixes) are made here first, then pulled into the site.
 
-### Assets
-- `src/assets/images/hero-bg-placeholder.jpg` — wide panoramic placeholder (≥3:1 ratio)
-- `src/assets/images/portrait-placeholder.png`
-- Work thumbnails
+---
 
-### `public/`
-- `favicon.svg` — buyer replaces
-- `og-image.png` — 1200×630 placeholder
+## Phase 8 — Leads + analytics
 
-### Documentation
-- `QUICK_START.md` — L1: clone → config → assets → npm run dev
-- `THEME_GUIDE.md` — L2: switch palette, create custom, change font
-- `SECTION_GUIDE.md` — L3: copy _template step by step
-- `CODING_RULES.md` — L4: all rules including CR-T1/T2/T3 from this file + animation rules
-- `README.md` — overview, stack, screenshot link
+In this repo, selected from config so buyers can swap providers:
+- Contact form via a serverless provider (Web3Forms or Formspree) + optional booking link (Cal.com).
+- Cookieless analytics (Plausible, Umami, or Cloudflare Web Analytics).
+- Events tagged with the profile slug: CTA click, CV download, email copy, form submit. UTM per landing.
 
-**Commits for Phase 6**:
-```
-feat(pages): add work/[slug] dynamic project detail page
-feat(assets): add placeholder hero-bg, portrait, and project images
-chore: add favicon and og-image placeholders
-docs: add buyer guides — QUICK_START, THEME_GUIDE, SECTION_GUIDE, CODING_RULES
-docs: update README
-```
+---
+
+## Phase 9 — Real use
+
+Remaining landings in the author site, copy tuned with real data. Every fix lands in the template, never in a copy.
+
+---
+
+## Phase 10 — Store packaging
+
+- Demo content complete and coherent; leak test in CI that fails if `components/` or `sections/` reference brand names or non-demo assets.
+- Confirm the font license for redistribution.
+- `npm run package:store` → `git archive` zip without `.git`.
+- Buyer docs: `QUICK_START.md` (clone → config → assets → `npm run dev`), `THEME_GUIDE.md`, `SECTION_GUIDE.md`, `PROFILE_GUIDE.md`, `CODING_RULES.md` (CR-T rules + animation rules), `README.md`.
+- Commercial license, `CHANGELOG.md`, published demo, screenshots.
+- Test install with npm and pnpm on Node 22, 24, 26.
 
 ---
 
 ## Rules for all phases
 
-- `npm run test:run` must pass before every commit.
-- `npm run build` at end of each phase to catch TypeScript / Astro errors.
-- No strings in `.astro` files — import from `@/config/content.ts`.
+- `npm run check`, `npm run test:run` and `npm run build` must pass before every PR (CI enforces it).
+- No personal content in this repo: demo values only.
+- No strings in `.astro` files — import from config or resolved content.
 - No color values in CSS — use `var(--color-*)` tokens driven by ThemeStyle.
 - Tailwind arbitrary `[]` only when no named equivalent exists (see CR-T1 above).
 - `data-animate="{section}-{element}"` for all GSAP targets. Never select by style class.
 - Wrap all GSAP calls in `if (shouldAnimateByPreference())`.
+- Never hide content before JS runs; dim it at most.
 - Scroll timelines created inside `onComplete` + `requestAnimationFrame` — ensures ScrollTrigger captures correct DOM state.
-- When adding a section: (1) folder in `sections/`, (2) key in `config/content.ts`, (3) register in `config/sections.ts`, (4) animation call in `pages/index.astro`.
+- When adding a section: (1) folder in `sections/`, (2) content type and copy in `config/content.ts`, (3) register in `config/sections.ts`, (4) animation call in the page orchestrator.
