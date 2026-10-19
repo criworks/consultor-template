@@ -107,7 +107,7 @@ Example where arbitrary IS correct: `max-w-[860px]` — no named equivalent for 
 | 2. Cleanup + CI ✅ | Unused deps and fonts out, Astro 7, readable hero without JS, CI | CI green on `main` |
 | 3. Config, profiles, i18n ✅ | Types, config per locale, profiles, ThemeStyle, routes | Two demo profiles build in ES and EN |
 | 4. Layouts + UI (port) ✅ | BaseLayout with Seo, primitives ported from consultant-web | Sample page shows every component |
-| 5. Header, Hero, intro (port) | Header, Hero entrance, scroll pan+blur, intro modes | Hero readable at 0 ms, LCP < 2 s mobile |
+| 5. Header, Hero, intro (port) ✅ | Header, Hero entrance, scroll pan+blur, intro modes | Hero readable at 0 ms, LCP < 2 s mobile |
 | 6. Sections | Work, About, Proof, Services, Contact, `_template/`, `work/[slug]` | Full home driven by config |
 | 7. Author site + deploy | `criworks-web` repo from the template, real content, deploy | Author site in production |
 | 8. Leads + analytics | Form, booking link, cookieless analytics, events per profile | Leads and visits visible per landing |
@@ -174,65 +174,19 @@ Repo init, tooling config, lib utilities (`constants`, `gsap`, `motion`), styles
 
 ---
 
-## Phase 5 — Header, Hero, intro (port from consultant-web)
+## Phase 5 — Header, Hero, intro (port from consultant-web) ✅ COMPLETE
 
-**Goal**: Header, Hero, and page-level animation orchestration. Hero text is readable at first paint → a short entrance lifts it → scroll drives bg pan + blur + intro fade.
+**What exists**:
+- `src/pages/[...path].astro` — fixed hero background (`<Image>` eager + `fetchpriority="high"`, `data-animate="hero-bg"`) with a bottom gradient for contrast, `intro-backdrop` layer, `<main>` with the Hero then the profile's sections, one `NavDrawer` (nav + language links) and one `Toast`. Sections other than Hero and Statement are placeholders until Phase 6.
+- `src/components/composed/Header.astro` — props only (no config imports). Nav links, language switch (`hreflang`), email button: address split into `data-u`/`data-d`, never in the HTML; reads `ui.email` until JS shows it; click copies and shows the Toast, `mailto:` fallback. Hamburger with `data-nav-drawer-open` below `narrow`.
+- `src/lib/animations/toast.ts` — `showToast(gsap, message)`. Not re-exported from `@/lib` (DOM code); import from `@/lib/animations`.
+- `src/lib/intro.ts` — `INTRO_SEEN_KEY` and pure `shouldPlayEntrance(mode, seen, reducedMotion)`, tested.
+- `src/sections/Hero/` — `Hero.astro` (Header, tagline, title, social links, subtitle, CTA to `hero.ctaHref`; `data-intro-mode`; sticky only with JS and motion allowed) and `Hero.anim.ts` (`createHeroEntrance`, `setHeroFinal`, `createHeroScroll`: bg pan + blur + opacity, backdrop in, hero text out in three groups, triggered by the next section).
+- `src/sections/Statement/` — ported Intro; copy in `content.statement`; lines rise in on scroll (`Statement.anim.ts`). Solid background when the scroll animation can't run.
+- Intro modes: `none` never dims or animates; `subtle` plays once per session (the inline head script adds `intro-seen` to `<html>` so a repeat visit is not dimmed); `full` plays every visit and also settles the bg image. Reduced motion skips all of it.
+- Content additions: `hero.tagline`, `hero.ctaHref`, `statement`, `ui.email`, `ui.copyEmail`; `statement` section key. Demo image `src/assets/images/hero-bg.webp` (3600×1200).
 
-### Page structure (`[...path].astro`)
-```astro
-<!-- Full-bleed hero background — wide panoramic, animated by GSAP during scroll -->
-<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-  <Image src={heroBg} alt="" data-animate="hero-bg" loading="eager" class="h-dvh w-auto max-w-none" />
-</div>
-
-<!-- Intro backdrop — starts invisible, GSAP drives opacity + blur during scroll -->
-<div class="fixed inset-0 z-10 pointer-events-none" data-animate="intro-backdrop" />
-
-<main class="relative z-40">
-  <Hero />
-  {/* sections from profile.sections */}
-</main>
-```
-
-### `src/components/header/Header.astro`
-Port from consultant-web: nav links from `site.nav[locale]`, contact button with email obfuscation (split on `@`, assembled in JS via `dataset.u` + `dataset.d`), copy to clipboard with toast, hamburger + NavDrawer below the `narrow` breakpoint. Layout rebuilt with Tailwind flex/grid. All labels from `content.ui`. Add a language switcher using `localizedPath`.
-
-### `src/lib/animations/shared.ts`
-`showToast({ gsap, message })`, `hideToast({ gsap })`. Barrel in `src/lib/animations/index.ts`.
-
-### `src/sections/Hero/`
-- `Hero.astro`: `section#hero sticky top-0 h-dvh overflow-hidden`. Text over the fixed bg image. Content from resolved content. `data-animate` attrs (`hero-title`, `hero-sub`, `hero-cta`, …) matching `hero-initial.css`.
-- `Hero.anim.ts`:
-  - `createHeroEntrance({ gsap, paused })` — port the cascade from consultant-web, from `opacity: HERO_ENTRANCE.START_OPACITY, y: HERO_ENTRANCE.OFFSET_Y`, total ≤ `HERO_ENTRANCE.MAX_DURATION`. `power3.out`.
-  - `createScrollAnimation({ gsap, trigger, isMobile })` — scrub:1 timeline: `hero-bg` pan `HERO_BG.PAN_X` + blur `BLUR_ENTER` → `BLUR_EXIT` + `OPACITY`; `intro-backdrop` opacity → 1, blur → 40px; hero text fades out in 3 groups; `intro-text` fades in from `y:50`.
-
-### Intro modes (from the profile)
-- `none` — no entrance; scroll animation only.
-- `subtle` (default) — entrance on the first visit of the session (`sessionStorage`), then direct.
-- `full` — entrance on every visit, plus the richer scroll sequence.
-Always skipped when `shouldAnimateByPreference()` is false.
-
-### Orchestration
-```ts
-if (shouldAnimateByPreference()) {
-  const heroTl = createHeroEntrance({ gsap, paused: true })
-  heroTl.eventCallback('onComplete', () => {
-    requestAnimationFrame(() => createScrollAnimation({ gsap, trigger: introEl, isMobile }))
-  })
-  introMode === 'none' || alreadySeen ? heroTl.progress(1) : heroTl.play()
-}
-```
-
-**Commits for Phase 5**:
-```
-feat(lib): add shared toast animation utilities
-feat(components): port Header with email obfuscation, toast, and mobile nav
-feat(sections): add Hero markup and layout
-feat(sections): add Hero entrance and scroll timeline with bg pan+blur
-feat(pages): wire hero layers, intro modes, and orchestration
-```
-
-**After Phase 5**: hero is readable before JS, the entrance takes under 0.8 s, scroll pans and blurs the bg, intro text fades in. LCP < 2 s on mobile (Lighthouse).
+**Checked in Chromium**: no console errors; without JS the hero is at full opacity and the email address is absent from the HTML; email copy + toast work; scroll fades the hero out and reveals the statement; `none` and repeat `subtle` visits are not dimmed; drawer opens on mobile. LCP element is the H1 (local preview); run Lighthouse on the Vercel preview for the mobile number.
 
 ---
 
