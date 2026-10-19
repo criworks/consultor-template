@@ -10,12 +10,14 @@
       "@/data/*": ["src/data/*"],
       "@/layouts/*": ["src/layouts/*"],
       "@/lib/*": ["src/lib/*"],
+      "@/profiles/*": ["src/profiles/*"],
       "@/sections/*": ["src/sections/*"],
       "@/styles/*": ["src/styles/*"],
       "@/config": ["src/config/index.ts"],
       "@/components": ["src/components/index.ts"],
       "@/data": ["src/data/index.ts"],
       "@/lib": ["src/lib/index.ts"],
+      "@/profiles": ["src/profiles/index.ts"],
       "@/sections": ["src/sections/index.ts"]
     }
   }

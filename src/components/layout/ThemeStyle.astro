@@ -1,0 +1,22 @@
+---
+// Turns config/theme.ts into CSS variables. The rule is unlayered, so it
+// overrides the @theme fallbacks in styles/theme/colors.css.
+import { activePalette, typography } from '@/config'
+
+const vars = {
+  '--color-background': activePalette.bg,
+  '--color-foreground': activePalette.fg,
+  '--color-accent': activePalette.accent,
+  '--color-accent-dark': activePalette.accentDark,
+  '--color-muted': activePalette.muted,
+  '--color-border': activePalette.border,
+  '--font-sans': typography.sans,
+  '--font-display': typography.display,
+}
+
+const css = `:root{${Object.entries(vars)
+  .map(([name, value]) => `${name}:${value}`)
+  .join(';')}}`
+---
+
+<style is:inline set:html={css}></style>

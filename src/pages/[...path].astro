@@ -1,0 +1,70 @@
+---
+// One route for every page: the home and each profile, in every locale.
+// Phase 3 placeholder: prints the resolved copy and sections. Real layout
+// and sections arrive in Phases 4–6.
+import type { GetStaticPaths } from 'astro'
+import { ThemeStyle } from '@/components'
+import { content, homeSections, locales, site } from '@/config'
+import type { SectionName } from '@/config'
+import type { IntroMode, Locale, Profile } from '@/data'
+import { projects } from '@/data'
+import { localizedPath, resolveContent, selectProjects } from '@/lib'
+import { profiles } from '@/profiles'
+import '@/styles/global.css'
+
+export const getStaticPaths = (() =>
+  locales.flatMap(locale => [
+    { params: { path: localizedPath(locale).slice(1) || undefined }, props: { locale } },
+    ...profiles.map(profile => ({
+      params: { path: localizedPath(locale, profile.slug).slice(1) },
+      props: { locale, profile },
+    })),
+  ])) satisfies GetStaticPaths
+
+interface Props {
+  locale: Locale
+  profile?: Profile
+}
+
+const { locale, profile } = Astro.props
+const copy = resolveContent(content, locale, profile?.content)
+const seo = profile?.seo[locale] ?? copy.seo
+const sections: readonly SectionName[] = profile?.sections ?? homeSections
+const featured = selectProjects(projects, profile?.projects)
+const intro: IntroMode = profile?.intro ?? site.defaultIntro
+const otherLocale = locales.find(l => l !== locale) ?? locale
+---
+
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{seo.title}</title>
+    <meta name="description" content={seo.description} />
+    <ThemeStyle />
+  </head>
+  <body class="min-h-dvh bg-background p-8 font-sans text-foreground">
+    <main class="mx-auto flex max-w-3xl flex-col gap-6">
+      <h1 class="text-4xl font-semibold">{copy.hero.title}</h1>
+      <p class="text-muted">{copy.hero.subtitle}</p>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+        <dt class="text-muted">Profile</dt>
+        <dd>{profile?.slug ?? 'home'}</dd>
+        <dt class="text-muted">Sections</dt>
+        <dd>{sections.join(' → ')}</dd>
+        <dt class="text-muted">Projects</dt>
+        <dd>{featured.map(p => p.title[locale]).join(', ')}</dd>
+        <dt class="text-muted">Intro</dt>
+        <dd>{intro}</dd>
+      </dl>
+      <nav class="flex flex-wrap gap-4 text-accent">
+        <a href={localizedPath(otherLocale, profile?.slug)}>{copy.ui.switchLanguage}</a>
+        {profile && <a href={localizedPath(locale)}>{copy.ui.backToHome}</a>}
+        {
+          !profile &&
+            profiles.map(p => <a href={localizedPath(locale, p.slug)}>{p.seo[locale].title}</a>)
+        }
+      </nav>
+    </main>
+  </body>
+</html>

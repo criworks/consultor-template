@@ -1,3 +1,6 @@
 export * from './constants'
 export * from './gsap'
 export * from './motion'
+export * from './i18n'
+export * from './content'
+export * from './profiles'

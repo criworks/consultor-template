@@ -29,7 +29,7 @@ Read "Product model" and "Stack & Architecture" once, then jump to your phase.
 
 1. **Three layers, never mixed**: template code (`components/`, `sections/`, `lib/`, `layouts/`, `styles/`), brand (`config/`, `assets/`), audience profiles (`profiles/`). A brand or profile need that requires editing a component becomes a config option or a new reusable section.
 2. **Config layer**: all buyer customization in `src/config/` (site.ts, theme.ts, content.ts, sections.ts). No strings in components.
-3. **Profiles**: one file per audience landing in `src/profiles/`. A profile only declares what differs from the base content (slug, sections, copy overrides, featured projects, SEO, intro mode). `pages/[...profile].astro` generates one page per profile and locale.
+3. **Profiles**: one file per audience landing in `src/profiles/`. A profile only declares what differs from the base content (slug, sections, copy overrides, featured projects, SEO, intro mode). `pages/[...path].astro` generates the home and one page per profile, per locale.
 4. **i18n from the start**: content is keyed by locale (`es`, `en`). Default locale at `/`, the other under its prefix (`/en/...`). Adding it later would change the config shape.
 5. **ThemeStyle.astro**: reads `config/theme.ts` and emits CSS vars in `<head>`. Color values are NEVER hardcoded in CSS files.
 6. **Sections in `src/sections/`**: each section has its own folder with `{Name}.astro` + `{Name}.anim.ts`. NOT in `components/`.
@@ -54,8 +54,7 @@ src/
 │   └── composed/ ← SectionHeader, ProjectCard, NavDrawer
 ├── sections/     ← one folder per section + _template/
 ├── pages/
-│   ├── index.astro
-│   ├── [...profile].astro
+│   ├── [...path].astro   ← home + every profile, every locale
 │   └── work/[slug].astro
 ├── data/         ← types.ts, projects.ts
 ├── lib/          ← constants, gsap, motion, i18n, animations/
@@ -106,7 +105,7 @@ Example where arbitrary IS correct: `max-w-[860px]` — no named equivalent for 
 |---|---|---|
 | 1. Foundation ✅ | Repo, tooling, lib utilities, styles skeleton | — |
 | 2. Cleanup + CI ✅ | Unused deps and fonts out, Astro 7, readable hero without JS, CI | CI green on `main` |
-| 3. Config, profiles, i18n | Types, config per locale, profiles, ThemeStyle, routes | Two demo profiles build in ES and EN |
+| 3. Config, profiles, i18n ✅ | Types, config per locale, profiles, ThemeStyle, routes | Two demo profiles build in ES and EN |
 | 4. Layouts + UI (port) | BaseLayout with Seo, primitives ported from consultant-web | Sample page shows every component |
 | 5. Header, Hero, intro (port) | Header, Hero entrance, scroll pan+blur, intro modes | Hero readable at 0 ms, LCP < 2 s mobile |
 | 6. Sections | Work, About, Proof, Services, Contact, `_template/`, `work/[slug]` | Full home driven by config |
@@ -137,119 +136,25 @@ Repo init, tooling config, lib utilities (`constants`, `gsap`, `motion`), styles
 
 ---
 
-## Phase 3 — Config layer, profiles, i18n
+## Phase 3 — Config layer, profiles, i18n ✅ COMPLETE
 
-**Goal**: the buyer-facing config layer with locales, the profile layer, ThemeStyle, and the routes that generate one page per profile and locale.
+**What exists**:
+- `src/config/i18n.ts` — single source for `locales` (`es`, `en`) and `defaultLocale` (`es`). `astro.config.mjs` imports it for Astro's i18n routing (`prefixDefaultLocale: false`).
+- `src/data/types.ts` — `Locale`, `Localized<T>`, `DeepPartial<T>`, `Content` (seo, nav, hero, proof, work, about, contact, ui), `ProjectItem` (localized title and description), `Palette`, `Typography`, `SiteConfig`, `IntroMode`, `Profile`.
+- `src/data/projects.ts` — three demo projects.
+- `src/config/` — `site.ts` (identity, social, `defaultIntro`), `theme.ts` (4 palettes, `activePaletteName`, typography), `content.ts` (`Localized<Content>`), `sections.ts` (`sectionNames`, `homeSections`), barrel.
+- `src/profiles/` — `_template.ts` (commented how-to), demo `hiring-manager.ts` (`contractor/hiring-manager`, intro `none`) and `agency.ts` (`freelance/agency`, intro `full`), `index.ts` loader (`import.meta.glob`, skips `_*` and `index`, validates).
+- `src/lib/i18n.ts` — `isLocale`, `localizedPath`. `src/lib/content.ts` — `deepMerge`, `resolveContent`, `selectProjects`. `src/lib/profiles.ts` — `validateProfiles` (slug format, duplicates, reserved first segments: locales and `work`).
+- `src/components/layout/ThemeStyle.astro` — emits an unlayered `:root{--color-*;--font-*}` rule that overrides the `@theme` fallbacks in `colors.css`.
+- `src/pages/[...path].astro` — one route for the home and every profile in every locale (6 pages with the demo data). Placeholder markup that prints the resolved title, sections, projects and intro mode.
+- 30 unit tests. Vitest resolves the tsconfig aliases through `getViteConfig`, so `vitest.config.ts` has no alias block.
 
-### `astro.config.mjs`
-```js
-i18n: { locales: ['es', 'en'], defaultLocale: 'es', routing: { prefixDefaultLocale: false } }
-```
-Buyers change `locales` and `defaultLocale` in one place; keep them mirrored in `config/site.ts`.
+**Decisions taken while building**:
+- One `[...path].astro` route instead of `index.astro` + `[...profile].astro`: the home is the page with no profile, so both share one code path.
+- SEO copy and nav live in `Content` (per locale). A profile's required `seo` replaces `content.seo` for its page.
+- Arrays in overrides replace the base array; objects merge field by field.
 
-### `src/data/types.ts`
-All interfaces with `readonly` properties:
-```ts
-export type Locale = 'es' | 'en'
-export type Localized<T> = Readonly<Record<Locale, T>>
-
-export interface NavItem { readonly label: string; readonly href: string }
-export interface SocialLink { readonly label: string; readonly href: string }
-export interface HeroContent { readonly title: string; readonly subtitle: string; readonly cta: string }
-export interface SectionContent { readonly title: string; readonly subtitle?: string }
-export interface AboutContent extends SectionContent { readonly bio: string; readonly skills: readonly string[] }
-export interface ProofContent { readonly role: string; readonly years: number; readonly specialties: readonly string[]; readonly availability: string; readonly timezone: string; readonly languages: readonly string[]; readonly cvUrl?: string }
-export interface ContactContent { readonly title: string; readonly tagline: string; readonly cta: string }
-export interface UIStrings {
-  readonly emailCopied: string
-  readonly openMenu: string
-  readonly closeMenu: string
-  readonly viewProject: string
-  readonly backToHome: string
-  readonly downloadCv: string
-}
-export interface Content {
-  readonly hero: HeroContent
-  readonly proof: ProofContent
-  readonly work: SectionContent
-  readonly about: AboutContent
-  readonly contact: ContactContent
-  readonly ui: UIStrings
-}
-export interface ProjectItem {
-  readonly slug: string
-  readonly title: string
-  readonly description: string
-  readonly thumbnail: string
-  readonly tags: readonly string[]
-  readonly url?: string
-  readonly year: number
-}
-export interface Palette {
-  readonly bg: string
-  readonly fg: string
-  readonly accent: string
-  readonly accentDark: string
-  readonly muted: string
-  readonly border: string
-}
-export interface SiteConfig {
-  readonly name: string
-  readonly email: string
-  readonly locales: readonly Locale[]
-  readonly defaultLocale: Locale
-  readonly seo: { readonly url: string; readonly image: string }
-  readonly nav: Localized<readonly NavItem[]>
-  readonly social: readonly SocialLink[]
-}
-export type IntroMode = 'none' | 'subtle' | 'full'
-export interface Profile {
-  readonly slug: string                       // URL path, e.g. 'contractor/cto'
-  readonly audience: string                   // internal note, not rendered
-  readonly sections: readonly SectionName[]   // order on the page
-  readonly content?: Partial<Localized<DeepPartial<Content>>>
-  readonly projects?: readonly string[]       // featured project slugs
-  readonly seo: Localized<{ readonly title: string; readonly description: string }>
-  readonly intro: IntroMode
-}
-```
-`SectionName` comes from `config/sections.ts`; add a small `DeepPartial` helper in the same file.
-
-### `src/data/projects.ts` + `src/data/index.ts`
-2–3 placeholder `ProjectItem[]`, clearly marked as demo. Barrel exports.
-
-### `src/config/`
-- `site.ts` — `SiteConfig` with demo values (`Your Name`, `you@yourdomain.com`).
-- `theme.ts` — `PALETTES` (teal-dark, sage-light, warm-dark, mono-light) + `activePalette` + `typography`.
-- `content.ts` — `Localized<Content>`: the default (home) copy for every locale.
-- `sections.ts` — `export const sectionNames = ['hero', 'proof', 'work', 'about', 'contact'] as const` and `homeSections`.
-- `index.ts` — barrel.
-
-### `src/profiles/`
-- `_template.ts` — fully commented; copy it to create a landing.
-- Two demo profiles, e.g. `hiring-manager.ts` (`intro: 'none'`) and `agency.ts` (`intro: 'full'`).
-- `index.ts` — loads every profile with `import.meta.glob('./*.ts', { eager: true })`, skipping `_template.ts`, and throws at build time on duplicate slugs.
-
-### `src/lib/i18n.ts`
-- `resolveContent(locale, profile?)` — deep-merges the profile override over `content[locale]`.
-- `localizedPath(locale, path)` — adds the locale prefix when it is not the default.
-- Unit tests for both, including the "profile overrides only one field" case.
-
-### `src/components/layout/ThemeStyle.astro`
-Reads `activePalette` and `typography` from `@/config`. Emits `<style define:vars={...}>` with all CSS vars. Update `src/styles/theme/colors.css` so values are `var(--color-*)` references.
-
-### Pages
-- `src/pages/index.astro` and `src/pages/[...profile].astro` with `getStaticPaths` over locales × profiles. Placeholder markup only (the real layout comes in Phase 4); print the resolved title and section list.
-
-**Commits for Phase 3**:
-```
-feat(data): add type definitions including Locale and Profile
-feat(config): add site, theme, localized content, and sections config
-feat(profiles): add profile loader, _template, and two demo profiles
-feat(lib): add i18n helpers with content merge and localized paths
-feat(components): add ThemeStyle — config/theme.ts to CSS vars injector
-feat(pages): generate one page per profile and locale
-```
+**How a page resolves its data**: `resolveContent(content, locale, profile?.content)` → copy; `profile?.seo[locale] ?? copy.seo` → SEO; `profile?.sections ?? homeSections` → sections; `selectProjects(projects, profile?.projects)` → projects; `profile?.intro ?? site.defaultIntro` → intro mode.
 
 ---
 
@@ -298,7 +203,7 @@ feat(components): add SectionHeader, ProjectCard, and NavDrawer
 
 **Goal**: Header, Hero, and page-level animation orchestration. Hero text is readable at first paint → a short entrance lifts it → scroll drives bg pan + blur + intro fade.
 
-### Page structure (`index.astro` and `[...profile].astro`)
+### Page structure (`[...path].astro`)
 ```astro
 <!-- Full-bleed hero background — wide panoramic, animated by GSAP during scroll -->
 <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
