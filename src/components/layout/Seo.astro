@@ -1,0 +1,61 @@
+---
+// Meta tags for one page: title, description, canonical, Open Graph, Twitter,
+// hreflang alternates for every locale, and JSON-LD for the person and service.
+import { defaultLocale, locales, site } from '@/config'
+import type { Locale } from '@/data'
+import { localizedPath } from '@/lib/i18n'
+
+interface Props {
+  title: string
+  description: string
+  locale: Locale
+  /** Path without locale prefix, e.g. 'contractor/cto' or '' for the home. */
+  path?: string
+  image?: string
+}
+
+const { title, description, locale, path = '', image = site.ogImage } = Astro.props
+
+const absolute = (p: string) => new URL(p, site.url).href
+const canonical = absolute(localizedPath(locale, path))
+const ogImage = absolute(image)
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Person',
+      name: site.name,
+      url: site.url,
+      sameAs: site.social.map(s => s.href),
+    },
+    {
+      '@type': 'ProfessionalService',
+      name: site.name,
+      url: canonical,
+      description,
+      founder: { '@type': 'Person', name: site.name },
+    },
+  ],
+}
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{locales.map(l => <link rel="alternate" hreflang={l} href={absolute(localizedPath(l, path))} />)}
+<link rel="alternate" hreflang="x-default" href={absolute(localizedPath(defaultLocale, path))} />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:locale" content={locale} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />

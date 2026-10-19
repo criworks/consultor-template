@@ -17,6 +17,7 @@
       "@/components": ["src/components/index.ts"],
       "@/data": ["src/data/index.ts"],
       "@/lib": ["src/lib/index.ts"],
+      "@/layouts": ["src/layouts/index.ts"],
       "@/profiles": ["src/profiles/index.ts"],
       "@/sections": ["src/sections/index.ts"]
     }
