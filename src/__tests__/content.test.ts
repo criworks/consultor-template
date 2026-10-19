@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { content } from '@/config/content'
-import { projects } from '@/data/projects'
+import type { ProjectItem } from '@/data'
 import { deepMerge, resolveContent, selectProjects } from '@/lib/content'
 
 describe('deepMerge', () => {
@@ -37,14 +37,22 @@ describe('resolveContent', () => {
   })
 })
 
+// A fixture, so replacing data/projects.ts with your own work keeps this green.
+const project = (slug: string) => ({ slug }) as unknown as ProjectItem
+const projects = [project('a'), project('b'), project('c')]
+
 describe('selectProjects', () => {
   it('returns all projects when no slugs are given', () => {
     expect(selectProjects(projects)).toHaveLength(projects.length)
   })
 
+  it('returns an empty list when there are no projects', () => {
+    expect(selectProjects([])).toEqual([])
+  })
+
   it('keeps the order of the slugs', () => {
-    const picked = selectProjects(projects, ['ai-assistant', 'fintech-dashboard'])
-    expect(picked.map(p => p.slug)).toEqual(['ai-assistant', 'fintech-dashboard'])
+    const picked = selectProjects(projects, ['c', 'a'])
+    expect(picked.map(p => p.slug)).toEqual(['c', 'a'])
   })
 
   it('throws on an unknown slug', () => {

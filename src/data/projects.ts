@@ -5,8 +5,9 @@ import type { ProjectItem } from './types'
 
 // DEMO PROJECTS — replace with your own work. Put thumbnails in
 // src/assets/images/work/ and import them above. Each project gets a page at
-// /work/{slug} (and /en/work/{slug}).
-export const projects = [
+// /work/{slug} (and /en/work/{slug}). Leave the list empty to hide the Work
+// section and the "View work" button until you have projects to show.
+export const projects: readonly ProjectItem[] = [
   {
     slug: 'fintech-dashboard',
     title: { es: 'Dashboard financiero', en: 'Fintech dashboard' },
@@ -51,4 +52,4 @@ export const projects = [
     tags: ['AI', 'UX'],
     year: 2024,
   },
-] as const satisfies readonly ProjectItem[]
+]
