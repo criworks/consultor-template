@@ -15,7 +15,20 @@ export interface NavItem { readonly label: string; readonly href: string }
 export interface SocialLink { readonly label: string; readonly href: string }
 
 export interface SeoContent { readonly title: string; readonly description: string }
-export interface HeroContent { readonly title: string; readonly subtitle: string; readonly cta: string }
+export interface HeroContent {
+  readonly tagline: string
+  readonly title: string
+  readonly subtitle: string
+  readonly cta: string
+  /** Where the CTA goes: an anchor ('#work') or a URL ('/cv.pdf'). */
+  readonly ctaHref: string
+}
+export interface StatementContent {
+  /** First line, in the foreground color. */
+  readonly lead: string
+  /** Following lines, in the accent color. */
+  readonly lines: readonly string[]
+}
 export interface SectionContent { readonly title: string; readonly subtitle?: string }
 export interface AboutContent extends SectionContent { readonly bio: string; readonly skills: readonly string[] }
 export interface ProofContent {
@@ -38,12 +51,16 @@ export interface UIStrings {
   readonly downloadCv: string
   readonly switchLanguage: string
   readonly mainNavigation: string
+  /** Label of the header email button before JS shows the address. */
+  readonly email: string
+  readonly copyEmail: string
 }
 
 export interface Content {
   readonly seo: SeoContent
   readonly nav: readonly NavItem[]
   readonly hero: HeroContent
+  readonly statement: StatementContent
   readonly proof: ProofContent
   readonly work: SectionContent
   readonly about: AboutContent

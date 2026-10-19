@@ -1,0 +1,89 @@
+---
+// Site header for the home and landings, ported from consultant-web.
+// Desktop: nav links, language switch, email button. Below `narrow`: a
+// hamburger that opens the NavDrawer (render one NavDrawer per page).
+//
+// The email address never appears in the HTML: it is split into data-u and
+// data-d and assembled by the script. Before JS runs the button reads
+// `emailLabel`. Clicking copies the address and shows the Toast; if the
+// clipboard is unavailable it opens a mailto: link.
+import { Mail, Menu } from '@lucide/astro'
+import { Link } from '@/components/ui'
+import type { NavItem } from '@/data'
+
+interface Props {
+  nav: readonly NavItem[]
+  navLabel: string
+  openMenuLabel: string
+  email: string
+  emailLabel: string
+  copyEmailLabel: string
+  copiedMessage: string
+  /** Links to this page in the other languages. */
+  languages: readonly { label: string; href: string; locale: string }[]
+}
+
+const { nav, navLabel, openMenuLabel, email, emailLabel, copyEmailLabel, copiedMessage, languages } = Astro.props
+const [emailUser, emailDomain] = email.split('@')
+---
+
+<header class="flex items-start justify-between gap-6 pt-10">
+  <div class="flex items-start gap-4" data-animate="hero-nav">
+    <button
+      type="button"
+      data-nav-drawer-open
+      class="flex h-11.75 w-13.5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-foreground/30 narrow:hidden"
+      aria-label={openMenuLabel}
+      aria-expanded="false"
+      aria-controls="nav-drawer"
+    >
+      <Menu size={18} class="text-foreground" aria-hidden="true" />
+    </button>
+    <nav class="flex flex-col gap-4 max-narrow:hidden" aria-label={navLabel}>
+      {nav.map(item => <Link variant="secondary" label={item.label} href={item.href} />)}
+    </nav>
+  </div>
+
+  <div class="flex items-start gap-8" data-animate="hero-contact">
+    {
+      languages.map(l => (
+        <Link variant="secondary" label={l.label} href={l.href} hreflang={l.locale} lang={l.locale} class="max-mobile:hidden" />
+      ))
+    }
+    <button
+      type="button"
+      id="header-email"
+      data-u={emailUser}
+      data-d={emailDomain}
+      data-copy-label={copyEmailLabel}
+      data-copied={copiedMessage}
+      class="flex cursor-pointer items-center gap-2 text-base font-semibold text-foreground transition-opacity hover:opacity-80"
+      aria-label={copyEmailLabel}
+    >
+      <Mail size={16} stroke-width={2.5} aria-hidden="true" />
+      <span data-email-label>{emailLabel}</span>
+    </button>
+  </div>
+</header>
+
+<script>
+  import { showToast } from '@/lib/animations'
+  import { gsap } from '@/lib/gsap'
+
+  const btn = document.getElementById('header-email')
+  if (btn) {
+    const email = `${btn.dataset.u ?? ''}@${btn.dataset.d ?? ''}`
+    const label = btn.querySelector('[data-email-label]')
+    if (label) label.textContent = email
+    btn.setAttribute('aria-label', `${btn.dataset.copyLabel ?? ''}: ${email}`)
+
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(email)
+        showToast(gsap, btn.dataset.copied ?? email)
+      } catch {
+        window.location.href = `mailto:${email}`
+      }
+    })
+  }
+</script>

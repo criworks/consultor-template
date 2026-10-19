@@ -23,10 +23,15 @@ const { title, description, locale, path, image } = Astro.props
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" href="/fonts/Switzer-Variable.woff2" as="font" type="font/woff2" crossorigin />
-    <!-- Runs before paint: marks JS as available (see hero-initial.css) and
-         keeps the browser from restoring scroll before animations set up. -->
+    <!-- Runs before paint: marks JS as available and whether the 'subtle'
+         intro already played (see hero-initial.css; the key matches
+         INTRO_SEEN_KEY in lib/intro.ts), and keeps the browser from
+         restoring scroll before animations set up. -->
     <script is:inline>
       document.documentElement.classList.add('js')
+      try {
+        if (sessionStorage.getItem('intro-seen') === '1') document.documentElement.classList.add('intro-seen')
+      } catch {}
       history.scrollRestoration = 'manual'
     </script>
     <Seo title={title} description={description} locale={locale} path={path} image={image} />
