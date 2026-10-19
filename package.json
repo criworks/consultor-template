@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
-    "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.0.5",
     "jsdom": "^30.0.1",
     "typescript": "^5.9.0 || ^6.0.0",
