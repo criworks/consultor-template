@@ -1,11 +1,10 @@
 ---
 // One route for every page: the home and each profile, in every locale.
-// Hero and Statement are real; the other sections are placeholders until
-// Phase 6.
+// The Hero always comes first; the rest follow the profile's `sections`.
 import type { GetStaticPaths } from 'astro'
 import { Image } from 'astro:assets'
 import heroBg from '@/assets/images/hero-bg.webp'
-import { NavDrawer, SectionHeader } from '@/components/composed'
+import { NavDrawer } from '@/components/composed'
 import { Toast } from '@/components/ui'
 import { content, homeSections, locales, site } from '@/config'
 import type { SectionName } from '@/config'
@@ -14,7 +13,7 @@ import { projects } from '@/data'
 import { localizedPath, resolveContent, selectProjects } from '@/lib'
 import { profiles } from '@/profiles'
 import { BaseLayout } from '@/layouts'
-import { Hero, Statement } from '@/sections'
+import { About, Contact, Hero, Proof, Services, Statement, Work } from '@/sections'
 
 export const getStaticPaths = (() =>
   locales.flatMap(locale => [
@@ -38,15 +37,10 @@ const featured = selectProjects(projects, profile?.projects)
 const intro: IntroMode = profile?.intro ?? site.defaultIntro
 const languages = locales
   .filter(l => l !== locale)
-  .map(l => ({ label: content[l].ui.switchLanguage, href: localizedPath(l, profile?.slug), locale: l }))
+  .map(l => ({ label: content[l].ui.languageName, href: localizedPath(l, profile?.slug), locale: l }))
 
-// Placeholder titles for the sections built in Phase 6.
-const placeholderTitles: Partial<Record<SectionName, string>> = {
-  proof: copy.proof.role,
-  work: copy.work.title,
-  about: copy.about.title,
-  contact: copy.contact.title,
-}
+// Work anchor for the Proof button: this page's Work section, else the home's.
+const workHref = sections.includes('work') ? '#work' : `${localizedPath(locale)}#work`
 ---
 
 <BaseLayout title={seo.title} description={seo.description} locale={locale} path={profile?.slug}>
@@ -70,24 +64,18 @@ const placeholderTitles: Partial<Record<SectionName, string>> = {
   <main class="relative z-20">
     <Hero copy={copy} languages={languages} intro={intro} />
     {
-      sections
-        .filter(name => name !== 'hero')
-        .map(name =>
-          name === 'statement' ? (
-            <Statement copy={copy.statement} />
-          ) : (
-            <section id={name} class="relative bg-background px-6 py-24 mobile:px-10">
-              <SectionHeader eyebrow={name} title={placeholderTitles[name] ?? name} />
-              {name === 'work' && (
-                <ul class="mt-8 text-muted">
-                  {featured.map(p => (
-                    <li>{p.title[locale]}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          ),
-        )
+      sections.map(name => (
+        <Fragment>
+          {name === 'statement' && <Statement copy={copy.statement} />}
+          {name === 'proof' && (
+            <Proof copy={copy.proof} viewWorkLabel={copy.ui.viewWork} downloadCvLabel={copy.ui.downloadCv} workHref={workHref} />
+          )}
+          {name === 'services' && <Services copy={copy.services} />}
+          {name === 'work' && <Work copy={copy.work} projects={featured} locale={locale} viewProjectLabel={copy.ui.viewProject} />}
+          {name === 'about' && <About copy={copy.about} />}
+          {name === 'contact' && <Contact copy={copy.contact} copyEmailLabel={copy.ui.copyEmail} copiedMessage={copy.ui.emailCopied} />}
+        </Fragment>
+      ))
     }
   </main>
 

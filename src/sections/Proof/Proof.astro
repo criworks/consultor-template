@@ -1,0 +1,56 @@
+---
+// "In 10 seconds": the facts a hiring manager scans for, with the two
+// actions they need. Copy in content.proof; the CV link shows when cvUrl is set.
+import { Download } from '@lucide/astro'
+import { SectionHeader } from '@/components/composed'
+import { Container } from '@/components/layout'
+import { Link } from '@/components/ui'
+import type { ProofContent } from '@/data'
+
+interface Props {
+  copy: ProofContent
+  viewWorkLabel: string
+  downloadCvLabel: string
+  /** '#work' when the page has the Work section, else the home's. */
+  workHref: string
+}
+
+const { copy, viewWorkLabel, downloadCvLabel, workHref } = Astro.props
+const facts = [
+  { label: copy.labels.role, value: copy.role },
+  { label: copy.labels.experience, value: `${copy.years}+ ${copy.labels.years}` },
+  { label: copy.labels.specialties, value: copy.specialties.join(' · ') },
+  { label: copy.labels.availability, value: copy.availability },
+  { label: copy.labels.timezone, value: copy.timezone },
+  { label: copy.labels.languages, value: copy.languages.join(' · ') },
+]
+---
+
+<section id="proof" class="relative bg-background py-24 narrow:py-32">
+  <Container class="flex flex-col gap-12">
+    <SectionHeader title={copy.title} animate="proof" />
+    <dl class="grid gap-x-10 gap-y-8 mobile:grid-cols-2 narrow:grid-cols-3">
+      {
+        facts.map(fact => (
+          <div class="flex flex-col gap-1 border-t border-border pt-4" data-animate="proof-fact">
+            <dt class="text-sm text-muted">{fact.label}</dt>
+            <dd class="text-xl font-semibold">{fact.value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+    <div class="flex flex-wrap items-center gap-8" data-animate="proof-actions">
+      <Link variant="primary" label={viewWorkLabel} href={workHref} />
+      {copy.cvUrl && <Link variant="primary" label={downloadCvLabel} href={copy.cvUrl} icon={Download} download />}
+    </div>
+  </Container>
+</section>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createProofAnimation } from './Proof.anim'
+
+  const section = document.getElementById('proof')
+  if (section && !prefersReducedMotion()) createProofAnimation(initGsap(), section)
+</script>

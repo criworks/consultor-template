@@ -1,0 +1,46 @@
+---
+// Copy-to-clipboard email button. The address never appears in the HTML: it
+// is split into data-u and data-d and assembled by lib/email.ts. Before JS
+// runs the button reads `label`; with `showAddress` JS then replaces it with
+// the address. Needs one Toast on the page.
+import { Mail } from '@lucide/astro'
+
+interface Props {
+  email: string
+  label: string
+  copyLabel: string
+  copiedMessage: string
+  showAddress?: boolean
+  variant?: 'plain' | 'pill'
+  class?: string
+  'data-animate'?: string
+}
+
+const { email, label, copyLabel, copiedMessage, showAddress = false, variant = 'plain', class: className, ...attrs } = Astro.props
+const [user, domain] = email.split('@')
+const variants = {
+  plain: 'gap-2 text-base text-foreground hover:opacity-80',
+  pill: 'gap-3 rounded-full bg-foreground px-6 py-3.5 text-lg text-background hover:opacity-90',
+}
+---
+
+<button
+  type="button"
+  data-email-button
+  data-u={user}
+  data-d={domain}
+  data-copy-label={copyLabel}
+  data-copied={copiedMessage}
+  data-show-address={showAddress ? '' : undefined}
+  class:list={['flex cursor-pointer items-center font-semibold transition-opacity', variants[variant], className]}
+  aria-label={copyLabel}
+  {...attrs}
+>
+  <Mail size={variant === 'pill' ? 20 : 16} stroke-width={2.5} aria-hidden="true" />
+  <span data-email-label>{label}</span>
+</button>
+
+<script>
+  import { bindEmailButtons } from '@/lib/email'
+  bindEmailButtons()
+</script>

@@ -28,7 +28,7 @@ const otherLocales = locales.filter(l => l !== locale)
       <div class="flex gap-4">
         {
           otherLocales.map(l => (
-            <Link variant="secondary" href={localizedPath(l, path)} label={content[l].ui.switchLanguage} hreflang={l} lang={l} />
+            <Link variant="secondary" href={localizedPath(l, path)} label={content[l].ui.languageName} hreflang={l} lang={l} />
           ))
         }
       </div>

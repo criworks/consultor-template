@@ -1,0 +1,51 @@
+---
+// HOW TO ADD A SECTION (example: a "Pricing" section)
+//
+// STEP 1 — Copy this folder to src/sections/Pricing/ and rename the files to
+//          Pricing.astro and Pricing.anim.ts. Folders starting with "_" are
+//          never rendered.
+// STEP 2 — Describe its copy in src/data/types.ts, e.g.
+//            export interface PricingContent extends SectionContent { readonly plans: readonly string[] }
+//          and add `readonly pricing: PricingContent` to `Content`.
+// STEP 3 — Write the copy for every language in src/config/content.ts.
+//          TypeScript lists any language you forget.
+// STEP 4 — Add 'pricing' to `sectionNames` in src/config/sections.ts (and to
+//          `homeSections` if the home should show it).
+// STEP 5 — Export it from src/sections/index.ts:
+//            export * from './Pricing'
+//          (plus an index.ts in the folder like the other sections), then
+//          render it in src/pages/[...path].astro next to the others:
+//            {name === 'pricing' && <Pricing copy={copy.pricing} />}
+// STEP 6 — Rename the animation in Pricing.anim.ts and in the script below.
+//
+// Then list 'pricing' in any profile's `sections` to show it on that landing.
+import { SectionHeader } from '@/components/composed'
+import { Container } from '@/components/layout'
+import type { SectionContent } from '@/data'
+
+interface Props {
+  copy: SectionContent
+}
+
+const { copy } = Astro.props
+---
+
+<!-- The id is the anchor for nav links (#template) and the animation hook. -->
+<section id="template" class="relative bg-background py-24 narrow:py-32">
+  <Container class="flex flex-col gap-12">
+    <!-- animate="template" adds data-animate="template-title" etc. -->
+    <SectionHeader title={copy.title} subtitle={copy.subtitle} animate="template" />
+    <div data-animate="template-body">
+      <!-- Your markup. Reuse components from @/components. -->
+    </div>
+  </Container>
+</section>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createTemplateAnimation } from './Template.anim'
+
+  const section = document.getElementById('template')
+  if (section && !prefersReducedMotion()) createTemplateAnimation(initGsap(), section)
+</script>

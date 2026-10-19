@@ -1,0 +1,80 @@
+---
+// Project page for every project in data/projects.ts, in every locale:
+// /work/{slug} in the default language, /en/work/{slug} in English.
+import type { GetStaticPaths } from 'astro'
+import { Image } from 'astro:assets'
+import { ArrowLeft, ArrowUpRight } from '@lucide/astro'
+import { Container } from '@/components/layout'
+import { Badge, Link } from '@/components/ui'
+import { content, defaultLocale, locales } from '@/config'
+import { projects, type Locale, type ProjectItem } from '@/data'
+import { localizedPath } from '@/lib/i18n'
+import { PageLayout } from '@/layouts'
+
+export const getStaticPaths = (() =>
+  locales.flatMap(locale =>
+    projects.map(project => ({
+      params: { locale: locale === defaultLocale ? undefined : locale, slug: project.slug },
+      props: { locale, project },
+    })),
+  )) satisfies GetStaticPaths
+
+interface Props {
+  locale: Locale
+  project: ProjectItem
+}
+
+const { locale, project } = Astro.props
+const copy = content[locale]
+const title = project.title[locale]
+const description = project.description[locale]
+const path = `work/${project.slug}`
+---
+
+<PageLayout title={`${title} · ${copy.work.title}`} description={description} locale={locale} path={path} image={project.thumbnail.src}>
+  <Container tag="article" maxWidth="lg" class="flex flex-col gap-12 py-16 narrow:py-24">
+    <Link variant="secondary" label={copy.ui.allWork} href={`${localizedPath(locale)}#work`} />
+    <header class="flex flex-col gap-6">
+      <h1 class="font-display text-5xl font-bold leading-hero tracking-hero mobile:text-7xl">{title}</h1>
+      <p class="max-w-3xl text-xl text-muted mobile:text-2xl">{description}</p>
+    </header>
+    <Image
+      src={project.thumbnail}
+      alt=""
+      widths={[800, 1600]}
+      sizes="(min-width: 1211px) 1152px, 100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="aspect-4/3 w-full rounded-2xl border border-border object-cover"
+    />
+    <div class="grid gap-12 mobile:grid-cols-[1fr_2fr]">
+      <dl class="flex flex-col gap-6">
+        <div class="flex flex-col gap-1">
+          <dt class="text-sm text-muted">{copy.ui.year}</dt>
+          <dd class="text-lg font-semibold">{project.year}</dd>
+        </div>
+        <div class="flex flex-col gap-2">
+          <dt class="text-sm text-muted">{copy.ui.tags}</dt>
+          <dd>
+            <ul class="flex flex-wrap gap-2">{project.tags.map(tag => <li><Badge label={tag} /></li>)}</ul>
+          </dd>
+        </div>
+        {
+          project.url && (
+            <div>
+              <Link variant="tertiary" label={copy.ui.visitProject} href={project.url} icon={ArrowUpRight} />
+            </div>
+          )
+        }
+      </dl>
+      {
+        project.body && (
+          <div class="flex flex-col gap-5 text-lg leading-relaxed">
+            {project.body[locale].map(paragraph => <p>{paragraph}</p>)}
+          </div>
+        )
+      }
+    </div>
+    <Link variant="primary" label={copy.ui.backToHome} href={localizedPath(locale)} icon={ArrowLeft} iconPosition="left" />
+  </Container>
+</PageLayout>

@@ -1,0 +1,38 @@
+---
+// Closing call to action: copy-email button and social links. Copy in
+// content.contact; address and links in config/site.ts.
+import { Container } from '@/components/layout'
+import { EmailButton, Link } from '@/components/ui'
+import { site } from '@/config'
+import type { ContactContent } from '@/data'
+
+interface Props {
+  copy: ContactContent
+  copyEmailLabel: string
+  copiedMessage: string
+}
+
+const { copy, copyEmailLabel, copiedMessage } = Astro.props
+---
+
+<section id="contact" class="relative bg-background py-32 narrow:py-48">
+  <Container class="flex flex-col items-start gap-8">
+    <h2 class="font-display text-hero-title font-bold leading-hero tracking-hero" data-animate="contact-title">{copy.title}</h2>
+    <p class="max-w-xl text-xl text-muted mobile:text-2xl" data-animate="contact-tagline">{copy.tagline}</p>
+    <div data-animate="contact-cta">
+      <EmailButton email={site.email} label={copy.cta} copyLabel={copyEmailLabel} copiedMessage={copiedMessage} variant="pill" />
+    </div>
+    <div class="flex flex-wrap gap-8" data-animate="contact-social">
+      {site.social.map(link => <Link variant="tertiary" label={link.label} href={link.href} />)}
+    </div>
+  </Container>
+</section>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createContactAnimation } from './Contact.anim'
+
+  const section = document.getElementById('contact')
+  if (section && !prefersReducedMotion()) createContactAnimation(initGsap(), section)
+</script>

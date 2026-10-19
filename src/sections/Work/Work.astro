@@ -1,0 +1,34 @@
+---
+// Project grid. The page passes the projects already filtered by the
+// profile's `projects` (all of them when it has none).
+import { ProjectCard, SectionHeader } from '@/components/composed'
+import { Container } from '@/components/layout'
+import type { Locale, ProjectItem, SectionContent } from '@/data'
+
+interface Props {
+  copy: SectionContent
+  projects: readonly ProjectItem[]
+  locale: Locale
+  viewProjectLabel: string
+}
+
+const { copy, projects, locale, viewProjectLabel } = Astro.props
+---
+
+<section id="work" class="relative bg-background py-24 narrow:py-32">
+  <Container class="flex flex-col gap-12">
+    <SectionHeader title={copy.title} subtitle={copy.subtitle} animate="work" />
+    <div class="grid gap-x-8 gap-y-14 mobile:grid-cols-2 narrow:grid-cols-3">
+      {projects.map(project => <ProjectCard project={project} locale={locale} linkLabel={viewProjectLabel} />)}
+    </div>
+  </Container>
+</section>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createWorkAnimation } from './Work.anim'
+
+  const section = document.getElementById('work')
+  if (section && !prefersReducedMotion()) createWorkAnimation(initGsap(), section)
+</script>
