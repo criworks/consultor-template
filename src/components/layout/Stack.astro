@@ -1,0 +1,16 @@
+---
+import type { HTMLAttributes, HTMLTag } from 'astro/types'
+
+type Props = HTMLAttributes<'div'> & {
+  tag?: HTMLTag
+  gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+}
+
+const { tag: Tag = 'div', gap = 'md', class: className, ...attrs } = Astro.props
+
+const gaps = { xs: 'gap-2', sm: 'gap-4', md: 'gap-6', lg: 'gap-10', xl: 'gap-16' }
+---
+
+<Tag class:list={['flex flex-col', gaps[gap], className]} {...attrs}>
+  <slot />
+</Tag>

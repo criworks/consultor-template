@@ -2,7 +2,7 @@ import { locales } from '@/config/i18n'
 import type { Profile } from '@/data'
 
 // First URL segments the template already uses for its own pages.
-const RESERVED_SEGMENTS = ['work']
+const RESERVED_SEGMENTS = ['work', 'kit']
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/
 
 /** Fails the build with a clear message when two profiles collide or a slug is unusable. */

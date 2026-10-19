@@ -1,0 +1,100 @@
+---
+// Mobile navigation overlay, ported from consultant-web. Any element with
+// data-nav-drawer-open (the hamburger in the Header) opens it; Escape, the
+// close button, or a link click closes it. Focus moves into the drawer and
+// back to the trigger.
+import { X } from '@lucide/astro'
+import type { NavItem } from '@/data'
+
+interface Props {
+  items: readonly NavItem[]
+  closeLabel: string
+  navLabel: string
+}
+
+const { items, closeLabel, navLabel } = Astro.props
+---
+
+<div
+  id="nav-drawer"
+  class="fixed inset-0 z-50 hidden flex-col bg-background/95 p-10 backdrop-blur-sm"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+>
+  <div class="mb-12 flex justify-end">
+    <button
+      type="button"
+      data-nav-drawer-close
+      class="flex h-11.75 w-13.5 cursor-pointer items-center justify-center rounded-full bg-foreground/30"
+      aria-label={closeLabel}
+    >
+      <X size={18} class="text-foreground" aria-hidden="true" />
+    </button>
+  </div>
+  <nav class="flex flex-col gap-8" aria-label={navLabel}>
+    {
+      items.map(item => (
+        <a href={item.href} class="text-3xl font-semibold text-foreground transition-opacity hover:opacity-80" data-animate="nav-drawer-link">
+          {item.label}
+        </a>
+      ))
+    }
+  </nav>
+</div>
+
+<script>
+  import { ANIMATION_DELAYS, ANIMATION_EASING, ANIMATION_TIMINGS } from '@/lib/constants'
+  import { gsap } from '@/lib/gsap'
+  import { shouldAnimateByPreference } from '@/lib/motion'
+
+  const drawer = document.getElementById('nav-drawer')
+  const triggers = document.querySelectorAll<HTMLElement>('[data-nav-drawer-open]')
+  let lastTrigger: HTMLElement | null = null
+
+  function setExpanded(value: boolean): void {
+    triggers.forEach(t => t.setAttribute('aria-expanded', String(value)))
+  }
+
+  function open(trigger: HTMLElement): void {
+    if (!drawer) return
+    lastTrigger = trigger
+    drawer.classList.replace('hidden', 'flex')
+    drawer.setAttribute('aria-hidden', 'false')
+    setExpanded(true)
+    document.body.style.overflow = 'hidden'
+    drawer.querySelector<HTMLElement>('[data-nav-drawer-close]')?.focus()
+
+    if (shouldAnimateByPreference()) {
+      gsap.fromTo(drawer, { opacity: 0 }, { opacity: 1, duration: ANIMATION_TIMINGS.FAST, ease: ANIMATION_EASING.POWER_OUT })
+      gsap.fromTo(
+        drawer.querySelectorAll('[data-animate="nav-drawer-link"]'),
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: ANIMATION_TIMINGS.NORMAL, stagger: ANIMATION_DELAYS.STAGGER, ease: ANIMATION_EASING.EASE_OUT_STRONG },
+      )
+    }
+  }
+
+  function close(): void {
+    if (!drawer || drawer.classList.contains('hidden')) return
+    const finish = () => {
+      drawer.classList.replace('flex', 'hidden')
+      drawer.setAttribute('aria-hidden', 'true')
+      setExpanded(false)
+      document.body.style.overflow = ''
+      lastTrigger?.focus()
+    }
+    if (shouldAnimateByPreference()) {
+      gsap.to(drawer, { opacity: 0, duration: ANIMATION_TIMINGS.FAST, ease: ANIMATION_EASING.POWER_IN, onComplete: finish })
+    } else {
+      finish()
+    }
+  }
+
+  triggers.forEach(t => t.addEventListener('click', () => open(t)))
+  drawer?.querySelector('[data-nav-drawer-close]')?.addEventListener('click', close)
+  drawer?.querySelectorAll('a').forEach(a => a.addEventListener('click', close))
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') close()
+  })
+</script>

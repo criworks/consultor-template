@@ -1,0 +1,18 @@
+---
+interface Props {
+  eyebrow?: string
+  title: string
+  subtitle?: string
+  /** Prefix for data-animate targets, e.g. 'work' → work-eyebrow, work-title. */
+  animate?: string
+}
+
+const { eyebrow, title, subtitle, animate } = Astro.props
+const target = (part: string) => (animate ? `${animate}-${part}` : undefined)
+---
+
+<header class="flex flex-col gap-3">
+  {eyebrow && <p class="text-sm font-semibold uppercase tracking-wide text-accent" data-animate={target('eyebrow')}>{eyebrow}</p>}
+  <h2 class="font-display text-4xl font-semibold mobile:text-5xl" data-animate={target('title')}>{title}</h2>
+  {subtitle && <p class="max-w-2xl text-lg text-muted" data-animate={target('subtitle')}>{subtitle}</p>}
+</header>

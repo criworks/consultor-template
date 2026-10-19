@@ -1,0 +1,17 @@
+---
+interface Props {
+  label: string
+  color?: 'default' | 'accent'
+}
+
+const { label, color = 'default' } = Astro.props
+
+const colors = {
+  default: 'border-border text-muted',
+  accent: 'border-accent/40 text-accent',
+}
+---
+
+<span class:list={['inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium', colors[color]]}>
+  {label}
+</span>

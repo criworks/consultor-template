@@ -1,0 +1,40 @@
+---
+// Inner pages (project detail, etc.): BaseLayout plus a fixed top bar with
+// the site name and a language switch. The home and landings use the full
+// Header from Phase 5 instead.
+import { Container } from '@/components/layout'
+import { Link } from '@/components/ui'
+import { content, locales, site } from '@/config'
+import type { Locale } from '@/data'
+import { localizedPath } from '@/lib/i18n'
+import BaseLayout from './BaseLayout.astro'
+
+interface Props {
+  title: string
+  description: string
+  locale: Locale
+  path?: string
+  image?: string
+}
+
+const { locale, path = '' } = Astro.props
+const otherLocales = locales.filter(l => l !== locale)
+---
+
+<BaseLayout {...Astro.props}>
+  <header class="fixed inset-x-0 top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
+    <Container tag="nav" class="flex items-center justify-between py-4" aria-label={content[locale].ui.mainNavigation}>
+      <Link variant="secondary" href={localizedPath(locale)} label={site.name} />
+      <div class="flex gap-4">
+        {
+          otherLocales.map(l => (
+            <Link variant="secondary" href={localizedPath(l, path)} label={content[l].ui.switchLanguage} hreflang={l} lang={l} />
+          ))
+        }
+      </div>
+    </Container>
+  </header>
+  <main class="pt-20">
+    <slot />
+  </main>
+</BaseLayout>

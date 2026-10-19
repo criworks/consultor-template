@@ -1,0 +1,51 @@
+---
+// Ported from consultant-web (secondary) and extended with primary and ghost.
+import type { AstroComponent } from '@lucide/astro'
+import type { HTMLAttributes } from 'astro/types'
+
+interface Props extends HTMLAttributes<'button'> {
+  variant?: 'primary' | 'secondary' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  icon?: AstroComponent
+  iconSize?: number
+  iconStrokeWidth?: number
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  icon: Icon,
+  iconSize = 16,
+  iconStrokeWidth = 2.5,
+  type = 'button',
+  class: className,
+  ...attrs
+} = Astro.props
+
+const variants = {
+  primary: 'rounded-full bg-foreground text-background hover:opacity-90',
+  secondary: 'text-foreground hover:opacity-80',
+  ghost: 'rounded-full border border-border text-foreground hover:bg-foreground/10',
+}
+
+// secondary is a text button, so it gets no padding
+const sizes = {
+  sm: variant === 'secondary' ? 'text-sm' : 'px-3 py-1.5 text-sm',
+  md: variant === 'secondary' ? 'text-base' : 'px-4 py-2.5 text-base',
+  lg: variant === 'secondary' ? 'text-xl' : 'px-6 py-3.5 text-xl',
+}
+---
+
+<button
+  type={type}
+  class:list={[
+    'inline-flex cursor-pointer items-center gap-2 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50',
+    variants[variant],
+    sizes[size],
+    className,
+  ]}
+  {...attrs}
+>
+  {Icon && <Icon size={iconSize} stroke-width={iconStrokeWidth} class="shrink-0" aria-hidden="true" />}
+  <slot />
+</button>

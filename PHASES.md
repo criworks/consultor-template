@@ -106,7 +106,7 @@ Example where arbitrary IS correct: `max-w-[860px]` — no named equivalent for 
 | 1. Foundation ✅ | Repo, tooling, lib utilities, styles skeleton | — |
 | 2. Cleanup + CI ✅ | Unused deps and fonts out, Astro 7, readable hero without JS, CI | CI green on `main` |
 | 3. Config, profiles, i18n ✅ | Types, config per locale, profiles, ThemeStyle, routes | Two demo profiles build in ES and EN |
-| 4. Layouts + UI (port) | BaseLayout with Seo, primitives ported from consultant-web | Sample page shows every component |
+| 4. Layouts + UI (port) ✅ | BaseLayout with Seo, primitives ported from consultant-web | Sample page shows every component |
 | 5. Header, Hero, intro (port) | Header, Hero entrance, scroll pan+blur, intro modes | Hero readable at 0 ms, LCP < 2 s mobile |
 | 6. Sections | Work, About, Proof, Services, Contact, `_template/`, `work/[slug]` | Full home driven by config |
 | 7. Author site + deploy | `criworks-web` repo from the template, real content, deploy | Author site in production |
@@ -158,44 +158,19 @@ Repo init, tooling config, lib utilities (`constants`, `gsap`, `motion`), styles
 
 ---
 
-## Phase 4 — Layouts + UI primitives (port from consultant-web)
+## Phase 4 — Layouts + UI primitives (port from consultant-web) ✅ COMPLETE
 
-**Goal**: BaseLayout, PageLayout, Seo, and all UI components. Port behavior and look from `criworks/consultant-web` (branch `development`), adapted to these rules: strings from config, colors from tokens, no `site-col-*` grid.
+**What exists**:
+- `src/components/layout/Seo.astro` — title, description, canonical, Open Graph, Twitter card, `hreflang` for every locale plus `x-default`, JSON-LD (`Person` + `ProfessionalService`). Absolute URLs from `site.url`.
+- `src/layouts/BaseLayout.astro` — `<html lang>`, favicon, Switzer preload, inline head script (`js` class + `history.scrollRestoration = 'manual'`), Seo, ThemeStyle. Props: `title`, `description`, `locale`, `path`, `image`.
+- `src/layouts/PageLayout.astro` — BaseLayout plus a fixed top bar (site name, language switch) for inner pages.
+- `src/components/layout/` — `Container` (`tag`, `maxWidth`), `Stack` (`tag`, `gap`).
+- `src/components/ui/` — `Link` (ported; `icon` typed as Lucide `AstroComponent`), `Button` (ported secondary, plus primary and ghost; `size`), `Badge`, `Toast` (`#toast` / `#toast-message`, centered without transforms so GSAP can own `y`).
+- `src/components/composed/` — `SectionHeader` (optional `animate` prefix for `data-animate`), `ProjectCard` (links to `work/{slug}` per locale), `NavDrawer` (ported; opened by any `[data-nav-drawer-open]`, closes on Escape, close button or link; moves focus in and back; GSAP fade + stagger, skipped with reduced motion).
+- `src/pages/kit/[...locale].astro` — component kit at `/kit` and `/kit/en`, built only in `npm run dev`. `kit` is a reserved profile slug.
+- Demo assets: `public/favicon.svg`, `public/images/work-placeholder.svg`. New UI string `ui.mainNavigation`.
 
-### `src/components/layout/Seo.astro`
-Props: `title`, `description`, `image`, `locale`, `path`. Emits title, description, canonical, Open Graph, Twitter card, `hreflang` alternates for every locale, and JSON-LD (`Person` + `ProfessionalService`).
-
-### `src/layouts/BaseLayout.astro`
-- Imports `@/styles/global.css`, injects `<ThemeStyle />` and `<Seo />` in `<head>`.
-- `<html lang={locale}>`.
-- Inline script in `<head>`: `document.documentElement.classList.add('js')` and `history.scrollRestoration = 'manual'`.
-- Preloads the Switzer variable font.
-- **No Lenis.**
-
-### `src/layouts/PageLayout.astro`
-Wraps BaseLayout. Adds the fixed nav for inner pages.
-
-### `src/components/layout/`
-`Container.astro` (props `maxWidth`, `tag`), `Stack.astro` (`gap`), barrel.
-
-### `src/components/ui/`
-- `Link.astro` — port from consultant-web. Variants `primary` (CTA with icon in circle), `secondary` (nav link with optional `active` dot), `tertiary` (social: dot mode if `active` is passed, arrow + `_blank` otherwise). Type `icon` properly instead of `any`.
-- `Button.astro` — port and extend: `variant` ('primary' | 'secondary' | 'ghost'), `icon`, `size`, `type` (default 'button').
-- `Badge.astro` — `label`, `color` ('default' | 'accent').
-- `Toast.astro` — fixed container, ids `toast` / `toast-message`.
-- Barrel.
-
-### `src/components/composed/`
-`SectionHeader.astro` (`eyebrow`, `title`, `subtitle`), `ProjectCard.astro` (`project`, `data-animate="work-card"`), `NavDrawer.astro` (mobile overlay, port from consultant-web, GSAP open/close), barrels.
-
-**Commits for Phase 4**:
-```
-feat(components): add Seo with canonical, hreflang, OG, and JSON-LD
-feat(layouts): add BaseLayout and PageLayout
-feat(components): add Container and Stack layout primitives
-feat(components): port Link and Button; add Badge and Toast
-feat(components): add SectionHeader, ProjectCard, and NavDrawer
-```
+**Notes for Phase 5**: the Header renders the hamburger with `data-nav-drawer-open` and places `<NavDrawer>` and `<Toast>` once per page. Avoid overriding a component's text size through `class` (Tailwind has no class merging here); add a prop instead.
 
 ---
 
