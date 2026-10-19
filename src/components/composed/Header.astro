@@ -3,12 +3,10 @@
 // Desktop: nav links, language switch, email button. Below `narrow`: a
 // hamburger that opens the NavDrawer (render one NavDrawer per page).
 //
-// The email address never appears in the HTML: it is split into data-u and
-// data-d and assembled by the script. Before JS runs the button reads
-// `emailLabel`. Clicking copies the address and shows the Toast; if the
-// clipboard is unavailable it opens a mailto: link.
-import { Mail, Menu } from '@lucide/astro'
-import { Link } from '@/components/ui'
+// The email button (ui/EmailButton) shows `emailLabel` until JS reveals the
+// address; clicking copies it and shows the Toast.
+import { Menu } from '@lucide/astro'
+import { EmailButton, Link } from '@/components/ui'
 import type { NavItem } from '@/data'
 
 interface Props {
@@ -24,7 +22,6 @@ interface Props {
 }
 
 const { nav, navLabel, openMenuLabel, email, emailLabel, copyEmailLabel, copiedMessage, languages } = Astro.props
-const [emailUser, emailDomain] = email.split('@')
 ---
 
 <header class="flex items-start justify-between gap-6 pt-10">
@@ -50,40 +47,7 @@ const [emailUser, emailDomain] = email.split('@')
         <Link variant="secondary" label={l.label} href={l.href} hreflang={l.locale} lang={l.locale} class="max-mobile:hidden" />
       ))
     }
-    <button
-      type="button"
-      id="header-email"
-      data-u={emailUser}
-      data-d={emailDomain}
-      data-copy-label={copyEmailLabel}
-      data-copied={copiedMessage}
-      class="flex cursor-pointer items-center gap-2 text-base font-semibold text-foreground transition-opacity hover:opacity-80"
-      aria-label={copyEmailLabel}
-    >
-      <Mail size={16} stroke-width={2.5} aria-hidden="true" />
-      <span data-email-label>{emailLabel}</span>
-    </button>
+    <EmailButton email={email} label={emailLabel} copyLabel={copyEmailLabel} copiedMessage={copiedMessage} showAddress />
   </div>
 </header>
 
-<script>
-  import { showToast } from '@/lib/animations'
-  import { gsap } from '@/lib/gsap'
-
-  const btn = document.getElementById('header-email')
-  if (btn) {
-    const email = `${btn.dataset.u ?? ''}@${btn.dataset.d ?? ''}`
-    const label = btn.querySelector('[data-email-label]')
-    if (label) label.textContent = email
-    btn.setAttribute('aria-label', `${btn.dataset.copyLabel ?? ''}: ${email}`)
-
-    btn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(email)
-        showToast(gsap, btn.dataset.copied ?? email)
-      } catch {
-        window.location.href = `mailto:${email}`
-      }
-    })
-  }
-</script>
