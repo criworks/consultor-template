@@ -40,7 +40,15 @@ const languages = locales
   .map(l => ({ label: content[l].ui.languageName, href: localizedPath(l, profile?.slug), locale: l }))
 
 // Work anchor for the Proof button: this page's Work section, else the home's.
-const workHref = sections.includes('work') ? '#work' : `${localizedPath(locale)}#work`
+// No button while there are no projects or no page shows them.
+const hasWork = featured.length > 0
+const workHref = !hasWork
+  ? undefined
+  : sections.includes('work')
+    ? '#work'
+    : (homeSections as readonly SectionName[]).includes('work')
+      ? `${localizedPath(locale)}#work`
+      : undefined
 ---
 
 <BaseLayout title={seo.title} description={seo.description} locale={locale} path={profile?.slug}>
@@ -78,7 +86,7 @@ const workHref = sections.includes('work') ? '#work' : `${localizedPath(locale)}
             <Proof copy={copy.proof} viewWorkLabel={copy.ui.viewWork} downloadCvLabel={copy.ui.downloadCv} workHref={workHref} />
           )}
           {name === 'services' && <Services copy={copy.services} />}
-          {name === 'work' && <Work copy={copy.work} projects={featured} locale={locale} viewProjectLabel={copy.ui.viewProject} />}
+          {name === 'work' && hasWork && <Work copy={copy.work} projects={featured} locale={locale} viewProjectLabel={copy.ui.viewProject} />}
           {name === 'about' && <About copy={copy.about} />}
           {name === 'contact' && <Contact copy={copy.contact} copyEmailLabel={copy.ui.copyEmail} copiedMessage={copy.ui.emailCopied} />}
         </Fragment>

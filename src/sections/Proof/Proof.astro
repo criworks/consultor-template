@@ -1,6 +1,7 @@
 ---
 // "In 10 seconds": the facts a hiring manager scans for, with the two
-// actions they need. Copy in content.proof; the CV link shows when cvUrl is set.
+// actions they need. Copy in content.proof; the CV link shows when cvUrl is set,
+// the work link when the site has projects to show.
 import { Download } from '@lucide/astro'
 import { SectionHeader } from '@/components/composed'
 import { Container } from '@/components/layout'
@@ -11,8 +12,8 @@ interface Props {
   copy: ProofContent
   viewWorkLabel: string
   downloadCvLabel: string
-  /** '#work' when the page has the Work section, else the home's. */
-  workHref: string
+  /** '#work' when the page has the Work section, else the home's. No button when omitted. */
+  workHref?: string
 }
 
 const { copy, viewWorkLabel, downloadCvLabel, workHref } = Astro.props
@@ -39,10 +40,14 @@ const facts = [
         ))
       }
     </dl>
-    <div class="flex flex-wrap items-center gap-8" data-animate="proof-actions">
-      <Link variant="primary" label={viewWorkLabel} href={workHref} />
-      {copy.cvUrl && <Link variant="primary" label={downloadCvLabel} href={copy.cvUrl} icon={Download} download />}
-    </div>
+    {
+      (workHref || copy.cvUrl) && (
+        <div class="flex flex-wrap items-center gap-8" data-animate="proof-actions">
+          {workHref && <Link variant="primary" label={viewWorkLabel} href={workHref} />}
+          {copy.cvUrl && <Link variant="primary" label={downloadCvLabel} href={copy.cvUrl} icon={Download} download />}
+        </div>
+      )
+    }
   </Container>
 </section>
 
