@@ -1,0 +1,47 @@
+---
+// Portrait, bio and skills. Replace src/assets/images/portrait.webp with
+// your photo (portrait orientation, about 4:5). Copy in content.about.
+import { Image } from 'astro:assets'
+import portrait from '@/assets/images/portrait.webp'
+import { SectionHeader } from '@/components/composed'
+import { Container } from '@/components/layout'
+import { Badge } from '@/components/ui'
+import type { AboutContent } from '@/data'
+
+interface Props {
+  copy: AboutContent
+}
+
+const { copy } = Astro.props
+---
+
+<section id="about" class="relative bg-background py-24 narrow:py-32">
+  <Container class="grid items-center gap-12 mobile:grid-cols-[2fr_3fr] narrow:gap-20">
+    <Image
+      src={portrait}
+      alt={copy.portraitAlt}
+      widths={[480, 960]}
+      sizes="(min-width: 721px) 40vw, 100vw"
+      class="aspect-4/5 w-full rounded-2xl object-cover"
+      data-animate="about-portrait"
+    />
+    <div class="flex flex-col gap-8">
+      <SectionHeader title={copy.title} subtitle={copy.subtitle} animate="about" />
+      <div class="flex flex-col gap-4 text-lg leading-relaxed" data-animate="about-bio">
+        {copy.bio.map(paragraph => <p>{paragraph}</p>)}
+      </div>
+      <ul class="flex flex-wrap gap-2" data-animate="about-skills">
+        {copy.skills.map(skill => <li><Badge label={skill} color="accent" /></li>)}
+      </ul>
+    </div>
+  </Container>
+</section>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createAboutAnimation } from './About.anim'
+
+  const section = document.getElementById('about')
+  if (section && !prefersReducedMotion()) createAboutAnimation(initGsap(), section)
+</script>

@@ -1,0 +1,51 @@
+---
+// What you offer and how you work, in numbered steps. Copy in content.services.
+import { SectionHeader } from '@/components/composed'
+import { Container } from '@/components/layout'
+import type { ServicesContent } from '@/data'
+
+interface Props {
+  copy: ServicesContent
+}
+
+const { copy } = Astro.props
+---
+
+<section id="services" class="relative bg-background py-24 narrow:py-32">
+  <Container class="flex flex-col gap-16">
+    <SectionHeader title={copy.title} subtitle={copy.subtitle} animate="services" />
+    <ul class="grid gap-6 mobile:grid-cols-2">
+      {
+        copy.items.map(item => (
+          <li class="flex flex-col gap-3 rounded-2xl border border-border p-8" data-animate="services-item">
+            <h3 class="text-2xl font-semibold">{item.title}</h3>
+            <p class="text-muted">{item.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="flex flex-col gap-8">
+      <h3 class="text-sm font-semibold uppercase tracking-wide text-accent" data-animate="services-process">{copy.processTitle}</h3>
+      <ol class="grid gap-8 mobile:grid-cols-2 narrow:grid-cols-4">
+        {
+          copy.steps.map((step, i) => (
+            <li class="flex flex-col gap-2" data-animate="services-step">
+              <span class="font-display text-4xl font-semibold text-accent" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h4 class="text-xl font-semibold">{step.title}</h4>
+              <p class="text-muted">{step.description}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </Container>
+</section>
+
+<script>
+  import { initGsap } from '@/lib/gsap'
+  import { prefersReducedMotion } from '@/lib/motion'
+  import { createServicesAnimation } from './Services.anim'
+
+  const section = document.getElementById('services')
+  if (section && !prefersReducedMotion()) createServicesAnimation(initGsap(), section)
+</script>
