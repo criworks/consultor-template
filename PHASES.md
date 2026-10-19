@@ -210,7 +210,10 @@ Done outside this repo, in `criworks/criworks-web`:
 - First three landings (e.g. hiring managers, CTOs, agencies) in ES and EN.
 - Domain, `@astrojs/sitemap`, `robots.txt`, static deploy (Cloudflare Pages or Vercel) with branch previews.
 
-Changes needed in this repo while doing it (new options, fixes) are made here first, then pulled into the site.
+Changes needed in this repo while doing it (new options, fixes) are made here first, then pulled into the site. So far:
+- `site.heroFocusX` — which part of the wide hero image stays centered on phones.
+- `styles/base/reset.css` moved into `@layer base`; unlayered, its `img { max-width: 100% }` beat Tailwind's `max-w-none` and squashed the hero image to the viewport width.
+- `@astrojs/sitemap` (with hreflang alternates) and a `robots.txt` endpoint, both from `site.url`; `trailingSlash: 'never'` so sitemap URLs match the canonical links.
 
 ---
 

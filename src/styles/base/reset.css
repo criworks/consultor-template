@@ -1,31 +1,34 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* In the base layer so Tailwind utilities (e.g. max-w-none) can override it. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 
-body {
-  min-height: 100dvh;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    min-height: 100dvh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-img,
-video,
-svg {
-  display: block;
-  max-width: 100%;
-}
+  img,
+  video,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }
