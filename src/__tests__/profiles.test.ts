@@ -25,6 +25,7 @@ describe('validateProfiles', () => {
   it('rejects slugs that start with a locale or a reserved path', () => {
     expect(() => validateProfiles([make('en/cto')])).toThrow(/reserved/)
     expect(() => validateProfiles([make('work/cto')])).toThrow(/reserved/)
+    expect(() => validateProfiles([make('kit')])).toThrow(/reserved/)
   })
 
   it('rejects malformed slugs', () => {

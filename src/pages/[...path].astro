@@ -1,16 +1,15 @@
 ---
 // One route for every page: the home and each profile, in every locale.
-// Phase 3 placeholder: prints the resolved copy and sections. Real layout
-// and sections arrive in Phases 4–6.
+// Placeholder body: prints the resolved copy and sections. The Header,
+// Hero and sections replace it in Phases 5–6.
 import type { GetStaticPaths } from 'astro'
-import { ThemeStyle } from '@/components'
 import { content, homeSections, locales, site } from '@/config'
 import type { SectionName } from '@/config'
 import type { IntroMode, Locale, Profile } from '@/data'
 import { projects } from '@/data'
 import { localizedPath, resolveContent, selectProjects } from '@/lib'
 import { profiles } from '@/profiles'
-import '@/styles/global.css'
+import { BaseLayout } from '@/layouts'
 
 export const getStaticPaths = (() =>
   locales.flatMap(locale => [
@@ -35,16 +34,8 @@ const intro: IntroMode = profile?.intro ?? site.defaultIntro
 const otherLocale = locales.find(l => l !== locale) ?? locale
 ---
 
-<html lang={locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{seo.title}</title>
-    <meta name="description" content={seo.description} />
-    <ThemeStyle />
-  </head>
-  <body class="min-h-dvh bg-background p-8 font-sans text-foreground">
-    <main class="mx-auto flex max-w-3xl flex-col gap-6">
+<BaseLayout title={seo.title} description={seo.description} locale={locale} path={profile?.slug}>
+    <main class="mx-auto flex max-w-3xl flex-col gap-6 p-8">
       <h1 class="text-4xl font-semibold">{copy.hero.title}</h1>
       <p class="text-muted">{copy.hero.subtitle}</p>
       <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
@@ -66,5 +57,4 @@ const otherLocale = locales.find(l => l !== locale) ?? locale
         }
       </nav>
     </main>
-  </body>
-</html>
+</BaseLayout>

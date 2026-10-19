@@ -1,0 +1,72 @@
+---
+// Component kit: every UI piece on one page, for checking a theme or a new
+// component. Only built in `npm run dev` (open /kit or /kit/en); production
+// builds skip it.
+import type { GetStaticPaths } from 'astro'
+import { Mail, Send } from '@lucide/astro'
+import { Container, NavDrawer, ProjectCard, SectionHeader, Stack } from '@/components'
+import { Badge, Button, Link, Toast } from '@/components/ui'
+import { content, defaultLocale, locales, site } from '@/config'
+import { projects, type Locale } from '@/data'
+import { BaseLayout } from '@/layouts'
+
+export const getStaticPaths = (() =>
+  import.meta.env.DEV
+    ? locales.map(locale => ({ params: { locale: locale === defaultLocale ? undefined : locale }, props: { locale } }))
+    : []) satisfies GetStaticPaths
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = content[locale]
+---
+
+<BaseLayout title="Component kit" description="All template components." locale={locale} path="kit">
+  <Container tag="main" class="py-16">
+    <Stack gap="xl">
+      <SectionHeader eyebrow="Kit" title="Components" subtitle="Every UI piece with the active palette and font." />
+
+      <Stack gap="sm">
+        <h3 class="text-sm uppercase text-muted">Link</h3>
+        <div class="flex flex-wrap items-center gap-8">
+          <Link variant="primary" href="#" label={copy.hero.cta} />
+          <Link variant="primary" href="#" label={copy.contact.cta} icon={Send} iconPosition="left" />
+          <Link variant="secondary" href="#" label={copy.nav[0]?.label ?? 'Nav'} active />
+          <Link variant="secondary" href="#" label={copy.nav[1]?.label ?? 'Nav'} />
+          {site.social.map(s => <Link variant="tertiary" href={s.href} label={s.label} />)}
+          <Link variant="tertiary" href="#" label="Status" active />
+        </div>
+      </Stack>
+
+      <Stack gap="sm">
+        <h3 class="text-sm uppercase text-muted">Button</h3>
+        <div class="flex flex-wrap items-center gap-6">
+          <Button>{copy.ui.downloadCv}</Button>
+          <Button variant="ghost" size="lg">{copy.ui.viewWork}</Button>
+          <Button variant="secondary" icon={Mail}>{site.email}</Button>
+          <Button size="sm" disabled>Disabled</Button>
+          <Button variant="ghost" data-nav-drawer-open aria-expanded="false">{copy.ui.openMenu}</Button>
+        </div>
+      </Stack>
+
+      <Stack gap="sm">
+        <h3 class="text-sm uppercase text-muted">Badge</h3>
+        <div class="flex flex-wrap gap-2">
+          {copy.about.skills.map(skill => <Badge label={skill} />)}
+          <Badge label={copy.proof.availability} color="accent" />
+        </div>
+      </Stack>
+
+      <Stack gap="sm">
+        <h3 class="text-sm uppercase text-muted">ProjectCard</h3>
+        <div class="grid gap-10 mobile:grid-cols-2 narrow:grid-cols-3">
+          {projects.map(project => <ProjectCard project={project} locale={locale} linkLabel={copy.ui.viewProject} />)}
+        </div>
+      </Stack>
+    </Stack>
+  </Container>
+  <NavDrawer items={copy.nav} closeLabel={copy.ui.closeMenu} navLabel={copy.ui.mainNavigation} />
+  <Toast />
+</BaseLayout>
