@@ -1,14 +1,16 @@
-/* Hide animated hero elements before GSAP takes control.
-   Only applies when user has no preference for reduced motion.
-   Elements become visible immediately when prefers-reduced-motion: reduce. */
+/* Hero starting state before GSAP takes control.
+   Content stays readable (dimmed, never hidden) so the hero works at first
+   paint, without JS, and if a script fails. The `js` class is set on <html>
+   by an inline script in BaseLayout. Keep the opacity in sync with
+   HERO_ENTRANCE.START_OPACITY in src/lib/constants.ts. */
 @media (prefers-reduced-motion: no-preference) {
-  .hero-title-line,
-  [data-animate='hero-tagline'],
-  [data-animate='hero-sub'],
-  [data-animate='hero-social'],
-  [data-animate='hero-status'],
-  [data-animate='hero-contact'],
-  [data-animate='hero-cta'] {
-    opacity: 0;
+  :root.js [data-animate='hero-title'],
+  :root.js [data-animate='hero-tagline'],
+  :root.js [data-animate='hero-sub'],
+  :root.js [data-animate='hero-social'],
+  :root.js [data-animate='hero-status'],
+  :root.js [data-animate='hero-contact'],
+  :root.js [data-animate='hero-cta'] {
+    opacity: 0.6;
   }
 }
