@@ -1,16 +1,21 @@
 /* Hero starting state before GSAP takes control.
    Content stays readable (dimmed, never hidden) so the hero works at first
-   paint, without JS, and if a script fails. The `js` class is set on <html>
-   by an inline script in BaseLayout. Keep the opacity in sync with
+   paint, without JS, and if a script fails. Only dimmed when the entrance
+   will play: intro 'full' always, 'subtle' until it has played once this
+   session. The `js` and `intro-seen` classes are set on <html> by the inline
+   script in BaseLayout. Keep the opacity in sync with
    HERO_ENTRANCE.START_OPACITY in src/lib/constants.ts. */
 @media (prefers-reduced-motion: no-preference) {
-  :root.js [data-animate='hero-title'],
-  :root.js [data-animate='hero-tagline'],
-  :root.js [data-animate='hero-sub'],
-  :root.js [data-animate='hero-social'],
-  :root.js [data-animate='hero-status'],
-  :root.js [data-animate='hero-contact'],
-  :root.js [data-animate='hero-cta'] {
-    opacity: 0.6;
+  :root.js [data-intro-mode='full'],
+  :root.js:not(.intro-seen) [data-intro-mode='subtle'] {
+    & [data-animate='hero-nav'],
+    & [data-animate='hero-tagline'],
+    & [data-animate='hero-title'],
+    & [data-animate='hero-social'],
+    & [data-animate='hero-sub'],
+    & [data-animate='hero-cta'],
+    & [data-animate='hero-contact'] {
+      opacity: 0.6;
+    }
   }
 }
