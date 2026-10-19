@@ -14,9 +14,19 @@ export const content = {
       { label: 'Contacto', href: '#contact' },
     ],
     hero: {
+      tagline: 'Consultor de producto en tu ciudad.',
       title: 'Diseño productos digitales que tu equipo puede construir',
       subtitle: 'Consultor de diseño y desarrollo. Web, apps, marca e IA.',
       cta: 'Ver trabajo',
+      ctaHref: '#work',
+    },
+    statement: {
+      lead: 'Sientes que todo está difuso.',
+      lines: [
+        'Estás construyendo rápido, pero no se ve claro.',
+        'El producto funciona, pero aún no se siente bien.',
+        'La visión está ahí, pero no todos parecen entenderla.',
+      ],
     },
     proof: {
       role: 'Consultor de producto',
@@ -48,6 +58,8 @@ export const content = {
       downloadCv: 'Descargar CV',
       switchLanguage: 'English',
       mainNavigation: 'Navegación principal',
+      email: 'Email',
+      copyEmail: 'Copiar email',
     },
   },
   en: {
@@ -61,9 +73,19 @@ export const content = {
       { label: 'Contact', href: '#contact' },
     ],
     hero: {
+      tagline: 'Product consultant based in your city.',
       title: 'I design digital products your team can build',
       subtitle: 'Design and development consultant. Web, apps, brand, and AI.',
       cta: 'See work',
+      ctaHref: '#work',
+    },
+    statement: {
+      lead: 'Everything feels blurry.',
+      lines: [
+        "You're building fast, but it doesn't look clear.",
+        "The product works, but it doesn't feel right yet.",
+        "The vision is there, but not everyone seems to get it.",
+      ],
     },
     proof: {
       role: 'Product consultant',
@@ -95,6 +117,8 @@ export const content = {
       downloadCv: 'Download CV',
       switchLanguage: 'Español',
       mainNavigation: 'Main navigation',
+      email: 'Email',
+      copyEmail: 'Copy email',
     },
   },
 } as const satisfies Localized<Content>

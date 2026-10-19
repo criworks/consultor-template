@@ -10,12 +10,14 @@ export default {
       hero: {
         title: 'Diseñador de producto senior, disponible para tu equipo',
         cta: 'Descargar CV',
+        ctaHref: '/cv.pdf',
       },
     },
     en: {
       hero: {
         title: 'Senior product designer, available for your team',
         cta: 'Download CV',
+        ctaHref: '/cv.pdf',
       },
     },
   },
