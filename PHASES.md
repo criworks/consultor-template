@@ -108,7 +108,7 @@ Example where arbitrary IS correct: `max-w-[860px]` — no named equivalent for 
 | 3. Config, profiles, i18n ✅ | Types, config per locale, profiles, ThemeStyle, routes | Two demo profiles build in ES and EN |
 | 4. Layouts + UI (port) ✅ | BaseLayout with Seo, primitives ported from consultant-web | Sample page shows every component |
 | 5. Header, Hero, intro (port) ✅ | Header, Hero entrance, scroll pan+blur, intro modes | Hero readable at 0 ms, LCP < 2 s mobile |
-| 6. Sections | Work, About, Proof, Services, Contact, `_template/`, `work/[slug]` | Full home driven by config |
+| 6. Sections ✅ | Work, About, Proof, Services, Contact, `_template/`, `work/[slug]` | Full home driven by config |
 | 7. Author site + deploy | `criworks-web` repo from the template, real content, deploy | Author site in production |
 | 8. Leads + analytics | Form, booking link, cookieless analytics, events per profile | Leads and visits visible per landing |
 | 9. Real use | Remaining landings, copy tuned with data, fixes made here | Weeks without structural changes |
@@ -190,32 +190,15 @@ Repo init, tooling config, lib utilities (`constants`, `gsap`, `motion`), styles
 
 ---
 
-## Phase 6 — Sections + _template + project pages
+## Phase 6 — Sections + _template + project pages ✅ COMPLETE
 
-**Goal**: all home sections, `_template/` for buyer extensibility, project detail pages. Pages render the sections listed in the profile.
-
-### `src/sections/`
-- `Proof/` — the "in 10 seconds" block for hiring managers: role, years, specialties, availability, timezone, languages, "View work" and "Download CV" buttons.
-- `Work/` — `SectionHeader` + grid of `ProjectCard`, filtered by `profile.projects` when set. `createWorkAnimation({ gsap, trigger })`, stagger from y:32.
-- `About/` — bio, skills (`Badge`), portrait. `createAboutAnimation`.
-- `Services/` — what is offered and the process, in steps. `createServicesAnimation`.
-- `Contact/` — title, tagline, email button, social links. `createContactAnimation`.
-- `_template/` — both files commented step by step (copy folder → rename → add content type and copy → register in `config/sections.ts` → add the animation call).
-
-### `src/pages/work/[slug].astro`
-Dynamic route from `data/projects.ts`, per locale. `PageLayout`. Thumbnail, title, year, tags, description, links.
-
-### Demo assets
-Wide panoramic hero placeholder (≥ 3:1), portrait placeholder, work thumbnails, `favicon.svg`, `og-image.png` (1200×630).
-
-**Commits for Phase 6**:
-```
-feat(sections): add Proof section for hiring managers
-feat(sections): add Work, About, Services, and Contact sections
-feat(sections): add _template section for buyer extensibility
-feat(pages): add work/[slug] project detail page
-feat(assets): add demo placeholders, favicon, and og-image
-```
+**What exists**:
+- `src/sections/` — `Proof` (role, years, specialties, availability, timezone, languages; "View work" and "Download CV", the latter only when `proof.cvUrl` is set), `Services` (offer cards + numbered process), `Work` (`ProjectCard` grid of the profile's projects), `About` (portrait, bio paragraphs, skill badges), `Contact` (large title, copy-email pill, social links). Each has `{Name}.anim.ts` built on `createReveal` (`lib/animations/reveal.ts`: fade + lift once on scroll, skipped with reduced motion; content is in the HTML at full opacity).
+- `src/sections/_template/` — `Template.astro` + `Template.anim.ts`, commented step by step (copy, type, copy per locale, register in `config/sections.ts`, export, render, animation). Never rendered.
+- `src/pages/[...locale]/work/[slug].astro` — project page per project and locale (`/work/{slug}`, `/en/work/{slug}`) with `PageLayout`: title, description, image, year, tags, optional `body` and `url`.
+- `ui/EmailButton` + `lib/email.ts` — the copy-email logic from the Header, shared with Contact (`plain` and `pill` variants).
+- Content and data: `services`, `proof.title` and `proof.labels`, `about.bio` as paragraphs, `about.portraitAlt`, `ui.visitProject` / `allWork` / `year` / `tags`; `ui.switchLanguage` replaced by `ui.languageName` (each language's own name, so the switch reads "English" on the Spanish page). `ProjectItem.thumbnail` is now an imported image (optimized by `astro:assets`) and gains optional `body`. `services` added to `sectionNames` and the home.
+- Demo assets: `src/assets/images/work/*.webp`, `src/assets/images/portrait.webp`, `public/og-image.png` (1200×630), `public/cv.pdf`. `public/images/work-placeholder.svg` removed.
 
 ---
 
