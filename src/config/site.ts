@@ -11,4 +11,5 @@ export const site = {
     { label: 'Instagram', href: 'https://instagram.com/your-handle' },
   ],
   defaultIntro: 'subtle',
+  heroFocusX: 0.5,
 } as const satisfies SiteConfig

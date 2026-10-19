@@ -135,6 +135,12 @@ export interface SiteConfig {
   readonly ogImage: string
   readonly social: readonly SocialLink[]
   readonly defaultIntro: IntroMode
+  /**
+   * Horizontal point of the hero image (0 = left edge, 1 = right edge) kept
+   * centered on phones, where only a slice of the wide image fits.
+   * Desktop always shows it from the left. Default 0.5.
+   */
+  readonly heroFocusX?: number
 }
 
 export interface Profile {

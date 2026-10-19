@@ -45,7 +45,8 @@ const workHref = sections.includes('work') ? '#work' : `${localizedPath(locale)}
 
 <BaseLayout title={seo.title} description={seo.description} locale={locale} path={profile?.slug}>
   <!-- Fixed background: pans and blurs as the page scrolls (Hero.anim.ts).
-       Eager and high priority because it is the LCP element. -->
+       Eager and high priority because it is the LCP element. On phones the
+       CSS `translate` centers site.heroFocusX; GSAP's transform adds to it. -->
   <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
     <Image
       src={heroBg}
@@ -54,7 +55,8 @@ const workHref = sections.includes('work') ? '#work' : `${localizedPath(locale)}
       sizes="300vh"
       loading="eager"
       fetchpriority="high"
-      class="block h-dvh w-auto max-w-none origin-left"
+      class="block h-dvh w-auto max-w-none origin-left max-mobile:absolute max-mobile:left-1/2 max-mobile:[translate:calc(var(--hero-focus)*-100%)_0]"
+      style={`--hero-focus: ${site.heroFocusX ?? 0.5}`}
       data-animate="hero-bg"
     />
     <div class="absolute inset-0 bg-linear-to-t from-background/70 via-background/20 to-transparent"></div>
