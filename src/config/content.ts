@@ -47,6 +47,7 @@ export const content = {
       backToHome: 'Volver al inicio',
       downloadCv: 'Descargar CV',
       switchLanguage: 'English',
+      mainNavigation: 'Navegación principal',
     },
   },
   en: {
@@ -93,6 +94,7 @@ export const content = {
       backToHome: 'Back to home',
       downloadCv: 'Download CV',
       switchLanguage: 'Español',
+      mainNavigation: 'Main navigation',
     },
   },
 } as const satisfies Localized<Content>

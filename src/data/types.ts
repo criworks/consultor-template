@@ -37,6 +37,7 @@ export interface UIStrings {
   readonly backToHome: string
   readonly downloadCv: string
   readonly switchLanguage: string
+  readonly mainNavigation: string
 }
 
 export interface Content {
