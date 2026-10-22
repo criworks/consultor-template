@@ -2,4 +2,9 @@
   /* Breakpoints — used with max-* and min-* Tailwind prefixes */
   --breakpoint-narrow: 1211px;
   --breakpoint-mobile: 721px;
+
+  /* Layout spacing — same names as the Figma `theme` variables
+     (space/page, space/indent). Utilities: px-page, pl-indent. */
+  --spacing-page: 2.5rem;
+  --spacing-indent: 129px;
 }

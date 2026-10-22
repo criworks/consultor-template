@@ -21,7 +21,7 @@ interface Props {
 const { copy, languages, intro } = Astro.props
 ---
 
-<section id="hero" class="hero relative flex h-dvh flex-col overflow-hidden px-6 pb-8 mobile:px-10" data-intro-mode={intro}>
+<section id="hero" class="hero relative flex h-dvh flex-col overflow-hidden px-6 pb-8 mobile:px-page" data-intro-mode={intro}>
   <Header
     nav={copy.nav}
     navLabel={copy.ui.mainNavigation}
@@ -33,7 +33,7 @@ const { copy, languages, intro } = Astro.props
     languages={languages}
   />
 
-  <div class="flex min-h-0 flex-1 flex-col justify-end gap-4 pb-15 narrow:pl-[25%]">
+  <div class="flex min-h-0 flex-1 flex-col justify-end gap-4 pb-15 narrow:pl-indent">
     <p class="text-sm font-semibold leading-none text-accent mobile:text-base" data-animate="hero-tagline">
       {copy.hero.tagline}
     </p>
@@ -45,7 +45,7 @@ const { copy, languages, intro } = Astro.props
     </div>
   </div>
 
-  <div class="flex flex-col gap-6 narrow:pl-[25%]">
+  <div class="flex flex-col gap-6 narrow:pl-indent">
     <p class="max-w-60 text-base font-semibold leading-sub mobile:max-w-93 mobile:text-2xl" data-animate="hero-sub">
       {copy.hero.subtitle}
     </p>
