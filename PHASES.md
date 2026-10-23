@@ -237,7 +237,7 @@ Remaining landings in the author site, copy tuned with real data. Every fix land
 - Demo content complete and coherent; leak test in CI that fails if `components/` or `sections/` reference brand names or non-demo assets.
 - Confirm the font license for redistribution.
 - `npm run package:store` → `git archive` zip without `.git`.
-- Buyer docs: `QUICK_START.md` (clone → config → assets → `npm run dev`), `THEME_GUIDE.md`, `SECTION_GUIDE.md`, `PROFILE_GUIDE.md`, `CODING_RULES.md` (CR-T rules + animation rules), `README.md`.
+- Buyer docs: `BUYERS.md` (basic vs advanced buyer, update flow, pending gaps; written early), `QUICK_START.md` (clone → config → assets → `npm run dev`), `THEME_GUIDE.md`, `SECTION_GUIDE.md`, `PROFILE_GUIDE.md`, `CODING_RULES.md` (CR-T rules + animation rules), `README.md`.
 - Commercial license, `CHANGELOG.md`, published demo, screenshots.
 - Test install with npm and pnpm on Node 22, 24, 26.
 
